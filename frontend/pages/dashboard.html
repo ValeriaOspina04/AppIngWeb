@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - ISO Secure 27001</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="user-info">
+            <p>Bienvenid@: <span id="userNameDisplay"> Cargando... </span></p>
+            <p>Rol: <span id="userRoleDisplay"> Cargando... </span></p>
+        </div>
+        <button onclick="logout()" class="btn-logout">Cerrar Sesión</button>
+        
+    </header>
+
+    <main class="dashboard-container">
+        <h2>Checklist de Evaluación ISO 27001</h2>
+        <p>Seleccione el estado de cada control según la auditoría actual.</p>
+        
+        <div class="actions-bar">
+            <button onclick="guardarTodo()" class="btn-primary">Guardar Progreso</button>
+            <button onclick="generarReporte()" class="btn-secondary">Generar Reporte</button>
+        </div>
+
+        <table class="checklist-table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Control</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody id="controlesBody">
+
+                </tbody>
+        </table>
+    </main>
+
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>
