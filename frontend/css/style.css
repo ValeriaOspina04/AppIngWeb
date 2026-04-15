@@ -172,3 +172,69 @@ h2 {
     cursor: pointer;
     border-radius: 4px;
 }
+
+/* Contenedor de los botones */
+.actions-bar {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 15px;                 /* Espacio entre botones */
+    padding: 20px;
+    background-color: #f8f9fa; /* Un gris muy tenue de fondo */
+    border-radius: 10px;
+    margin-top: 20px;
+    border: 1px solid #e9ecef;
+}
+
+/* Estilo base para ambos botones */
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Botón Guardar (Success) */
+.btn-success {
+    background-color: #198754;
+    color: white;
+    box-shadow: 0 4px 6px rgba(25, 135, 84, 0.2);
+}
+
+.btn-success:hover {
+    background-color: #157347;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(25, 135, 84, 0.3);
+}
+
+/* Botón Reporte (Secondary) */
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    box-shadow: 0 4px 6px rgba(108, 117, 125, 0.2);
+}
+
+.btn-secondary:hover {
+    background-color: #5c636a;
+    transform: translateY(-1px);
+}
+
+/* Efecto cuando se presionan */
+.btn:active {
+    transform: translateY(0);
+}
+
+#btnGuardar {
+    min-width: 160px; /* Evita que el botón se encoja al decir "Éxito" */
+    transition: all 0.3s ease;
+}
+
+.btn-success-anim {
+    background-color: #28a745 !important;
+    transform: scale(1.05);
+}

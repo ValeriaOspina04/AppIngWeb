@@ -20,9 +20,14 @@
         <p>Seleccione el estado de cada control según la auditoría actual.</p>
         
         <div class="actions-bar">
-            <button onclick="guardarTodo()" class="btn-primary">Guardar Progreso</button>
-            <button onclick="generarReporte()" class="btn-secondary">Generar Reporte</button>
-        </div>
+    <button onclick="generarReporte()" class="btn btn-secondary">
+        <span>📊</span> Generar Reporte
+    </button>
+    
+    <button type="button" id="btnGuardar" class="btn btn-success" onclick="guardarProgreso()">
+        <span>💾</span> Guardar Progreso
+    </button>
+</div>
 
         <table class="checklist-table">
             <thead>

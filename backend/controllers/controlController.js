@@ -9,16 +9,31 @@ exports.obtenerControles = async (req, res) => {
     }
 };
 
-exports.actualizarProgreso = async (req, res) => {
-    const { empresa_id, control_id, estado, observaciones } = req.body;
+exports.guardarAvances = async (req, res) => {
+    const { avances } = req.body; // Es el array que enviamos desde el JS del frontend
+    const usuario_id = req.user.id; // Obtenido del token JWT a través del middleware
+
     try {
-        // Implementa lógica de "UPSERT" (Insertar o Actualizar si ya existe)
-        const sql = `INSERT INTO progreso_checklist (empresa_id, control_id, estado, observaciones) 
-                     VALUES (?, ?, ?, ?) 
-                     ON DUPLICATE KEY UPDATE estado = ?, observaciones = ?`;
-        await db.query(sql, [empresa_id, control_id, estado, observaciones, estado, observaciones]);
-        res.json({ mensaje: "Progreso guardado correctamente" });
+        // Iniciamos una transacción para asegurar que no haya datos a medias
+        await Promise.all(avances.map(item => {
+            return db.query(
+                `INSERT INTO progreso_checklist 
+                    (control_id, usuario_id, estado, observaciones, fecha_actualizacion) 
+                VALUES (?, ?, ?, ?, NOW()) 
+                ON DUPLICATE KEY UPDATE 
+                    estado = VALUES(estado), 
+                    observaciones = VALUES(observaciones), 
+                    fecha_actualizacion = NOW()`,
+                [item.control_id, usuario_id, item.estado, item.observaciones]
+            );
+        }));
+
+        await db.query('COMMIT');
+
+        res.json({ mensaje: "Progreso guardado exitosamente" });
     } catch (error) {
-        res.status(500).json({ mensaje: "Error al guardar el progreso" });
+        await db.query('ROLLBACK');
+        console.error("error en el guardado:", error);
+        res.status(500).json({ mensaje: "Error interno al guardar los avances", detalle: error.message });
     }
 };
