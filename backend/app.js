@@ -11,7 +11,7 @@ app.use(express.json()); // Protección básica contra inyecciones y manejo de J
 
 // Rutas
 app.use('/api/controles', controlRoutes);
-app.use('/api/auth', authRoutes);
+//app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => {
