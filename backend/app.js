@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes'); // Para login/registro
 const app = express();
 
 // servir archivos estáticos (frontend)
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "frontend")));
 app.use(cors());
 app.use(express.json()); // Protección básica contra inyecciones y manejo de JSON
 
@@ -17,7 +17,15 @@ app.use('/api/controles', controlRoutes);
 app.use('/api/auth', authRoutes);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+  res.sendFile(path.join(__dirname, "frontend/login.html"));
+});
+
+app.get("/registro", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/registro.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/dashboard.html"));
 });
 
 const PORT = process.env.PORT || 3000;
