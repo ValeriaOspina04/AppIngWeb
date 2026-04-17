@@ -17,15 +17,15 @@ app.use('/api/controles', controlRoutes);
 app.use('/api/auth', authRoutes);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/login.html"));
+  res.sendFile(path.join(__dirname, "frontend/pages/login.html"));
 });
 
 app.get("/registro", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/registro.html"));
+  res.sendFile(path.join(__dirname, "frontend/pages/registro.html"));
 });
 
 app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dashboard.html"));
+  res.sendFile(path.join(__dirname, "frontend/pages/dashboard.html"));
 });
 
 const PORT = process.env.PORT || 3000;
