@@ -31,7 +31,7 @@ async function guardarProgreso() {
         btn.innerHTML = '<span>⏳</span> Guardando...';
         btn.disabled = true;
 
-        const response = await fetch('https://app-ing-web.vercel.app/api/usuarios', {
+        const response = await fetch('/api/usuarios', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
