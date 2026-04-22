@@ -9,6 +9,7 @@ const app = express();
 
 // servir archivos estáticos (frontend)
 app.use(express.static(path.join(__dirname, "frontend")));
+app.use(express.static(path.join(__dirname, '../frontend/pages')));
 app.use(cors());
 app.use(express.json()); // Protección básica contra inyecciones y manejo de JSON
 
