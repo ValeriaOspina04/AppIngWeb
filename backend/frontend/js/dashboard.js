@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function cargarControles() {
     try {
-        const response = await fetch('http://localhost:3000/api/controles', {
+        const response = await fetch('/api/controles', {
             method: 'GET',
             headers: { 
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
