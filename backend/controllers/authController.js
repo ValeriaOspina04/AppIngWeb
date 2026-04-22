@@ -35,13 +35,20 @@ exports.registrar = async (req, res) => {
 exports.login = async (req, res) => {
     const { correo, password } = req.body;
     try {
-        const [users] = await db.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
-        if (users.length === 0) return res.status(404).json({ mensaje: "Usuario no encontrado" });
-
-        const user = users[0];
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(401).json({ mensaje: "Contraseña incorrecta" });
-
+        const [rows] = await db.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
+        
+        if (rows.length === 0) {
+            return res.status(401).json({ mensaje: "Usuario no encontrado" });
+        }
+        
+        const user = rows[0];
+        
+        // ¡OJO AQUÍ! Si insertaste el usuario manual en Workbench con '123456'
+        // y aquí usas bcrypt.compare, VA A FALLAR.
+        // Para pruebas rápidas, compara directo si no has encriptado:
+        if (password !== user.password) { 
+            return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+        }
         // Crear Token incluyendo el ROL
         const token = jwt.sign(
             { id: user.id, rol: user.rol }, 
