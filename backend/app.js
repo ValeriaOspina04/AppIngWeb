@@ -20,11 +20,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/pages/login.html"));
 });
 
-app.get("/registro.html", (req, res) => {
+app.get("/registro", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/pages/registro.html"));
 });
 
-app.get("/dashboard.html", (req, res) => {
+app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/pages/dashboard.html"));
 });
 
