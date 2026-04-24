@@ -122,18 +122,28 @@ async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const filas = document.querySelectorAll('#controlesBody tr');
     
-    const avances = Array.from(filas).map(f => ({
-        control_id: f.dataset.id,
-        estado: f.querySelector('.status-select')?.value || null,
-        observaciones: f.querySelector('.input-observacion')?.value || null,
-        responsable: f.querySelector('.input-responsable')?.value || null,
-        fecha_limite: f.querySelector('.input-fecha')?.value || null,
-        link_evidencia: f.querySelector('.input-evidencia')?.value || null
-    }));
+    // Mapeamos los datos con cuidado
+    const avances = Array.from(filas).map(f => {
+        // Capturamos los valores de los inputs
+        const estadoSelect = f.querySelector('.status-select')?.value;
+        const responsableInput = f.querySelector('.input-responsable')?.value;
+        
+        return {
+            control_id: f.dataset.id,
+            // Si hay un select (Auditor), usamos ese valor. 
+            // Si no (Implementador), mandamos un estado por defecto para que la DB no de error.
+            estado: estadoSelect || "En Proceso", 
+            observaciones: f.querySelector('.input-observacion')?.value || null,
+            responsable: responsableInput || null,
+            fecha_limite: f.querySelector('.input-fecha')?.value || null,
+            link_evidencia: f.querySelector('.input-evidencia')?.value || null
+        };
+    });
 
     try {
         btn.disabled = true;
-        btn.textContent = "Cargando...";
+        btn.textContent = "Guardando...";
+
         const res = await fetch('/api/controles/guardar', {
             method: 'POST',
             headers: {
@@ -142,13 +152,22 @@ async function guardarProgreso() {
             },
             body: JSON.stringify({ avances })
         });
-        if (res.ok) alert("✅ Guardado correctamente.");
-        else alert("❌ Error al guardar.");
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("✅ ¡Progreso guardado con éxito!");
+        } else {
+            // Esto nos dirá exactamente qué campo está mal según el servidor
+            console.error("Detalle del error:", data);
+            alert("❌ Error al guardar: " + (data.mensaje || "Revisa los datos"));
+        }
     } catch (e) {
-        alert("🚫 Error de conexión.");
+        console.error("Error de red:", e);
+        alert("🚫 Error de conexión con el servidor.");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Progreso Actual";
+        btn.innerHTML = '<span>💾</span> Guardar Progreso Actual';
     }
 }
 
