@@ -151,7 +151,7 @@ function renderizarTabla(modo) {
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const filas = document.querySelectorAll('#controlesBody tr');
-    
+    const nombreEmpresa = localStorage.getItem('nombre_empresa');
     // Mostramos en consola para saber que el botón SÍ funciona
     console.log("Intentando guardar...");
 
@@ -177,7 +177,10 @@ async function guardarProgreso() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ controles }) // El nombre 'controles' debe coincidir con el backend
+            body: JSON.stringify({ 
+                controles: controles, 
+                nombre_empresa: nombreEmpresa 
+            })
             
         });
 
