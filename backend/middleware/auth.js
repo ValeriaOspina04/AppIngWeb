@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const verificarToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
         console.log("❌ No llegó el header de Authorization");
         return res.status(403).send("Token requerido");
     }
