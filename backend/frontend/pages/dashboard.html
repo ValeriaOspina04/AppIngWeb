@@ -1,168 +1,77 @@
-window.datosControlesGlobal = [];
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - ISO Secure 27001</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="user-info">
+            <p>Bienvenid@: <span id="userNameDisplay"> Cargando... </span></p>
+            <p>Rol: <span id="userRoleDisplay"> Cargando... </span></p>
+        </div>
+        <button onclick="logout()" class="btn-logout">Cerrar Sesión</button>
+    </header>
 
-// ==========================================
-// 1. GENERAR REPORTE PDF (Horizontal)
-// ==========================================
-function generarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l', 'mm', 'a4'); 
+    <div class="main-layout" >
 
-    doc.setFontSize(16);
-    doc.setTextColor(19, 190, 216);
-    doc.text("Plan de Implementación y Capacitación ISO 27001", 14, 15);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado por: ${localStorage.getItem('userName')}`, 14, 22);
+        <nav class="sidebar-nav">
+            <button class="tab-btn" onclick="showTab('home')">🏠 Inicio</button>
 
-    doc.autoTable({
-        html: 'table', // Captura la tabla actual que esté en pantalla
-        startY: 30,
-        theme: 'grid',
-        headStyles: { fillColor: [19, 190, 216] },
-        styles: { fontSize: 7 },
-        didParseCell: function(data) {
-            // Captura valores de inputs/selects para que no salgan vacíos en el PDF
-            const input = data.cell.raw.querySelector?.('input, select');
-            if (input) data.cell.text = [input.value];
-        }
-    });
+            <div class="sidebar-menu">
+                <button class="dropdown-btn" onclick="toggleMenu()">
+                    <span>📋 Controles ISO</span>
+                    <span class="arrow" id="menu-arrow">▼</span>
+                </button>
+                <div class="dropdown-container" id="dropdown-items">
+                    <button id="tab-auditor" class="tab-btn" onclick="showTab('auditor')">🔍 Auditoría</button>
+                    <button id="tab-capacitador" class="tab-btn" onclick="showTab('capacitador')">📚 Capacitación</button>
+                    <button id="tab-implementador" class="tab-btn" onclick="showTab('implementador')">🛠️ Implementación</button>
+                </div>
+            </div>
+        </nav>
 
-    doc.save(`Reporte_ISO27001_${new Date().toLocaleDateString()}.pdf`);
-}
+        <main class="dashboard-content">
 
-// ==========================================
-// 2. RENDERIZAR TABLA (Implementador vs Capacitador)
-// ==========================================
-function renderizarTabla(modo) {
-    const tbody = document.getElementById('controlesBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+            <section id="auditor" class="role-section active">
+                <h2>Checklist de Evaluación ISO 27001</h2>
+                <p>Auditoría de cumplimiento: Seleccione el estado de cada control.</p>
+                <div class="actions-bar">
+                    <button onclick="generarReporte()" class="btn btn-secondary"><span>📊</span> Generar Reporte</button>
+                    <button type="button" id="btnGuardar" class="btn btn-success" onclick="guardarProgreso()"><span>💾</span> Guardar progreso</button>
+                </div>
+            </section>
 
-    window.datosControlesGlobal.forEach(control => {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-id', control.control_id || control.id);
+            <section id="capacitador" class="role-section" style="display: none;">
+                <h2>Centro de Capacitación</h2>
+                <p>Evidencias y Formación: Suba el material de apoyo para cada control.</p>
+                </section>
 
-        let celdasExtra = '';
-        
-        // FOCO: EL HACER (Configuración y Puesta en marcha)
-        if (modo === 'implementador') {
-            celdasExtra = `
-                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Técnico a cargo..."></td>
-                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
-        } 
-        // FOCO: EL ENSEÑAR (Material y Conocimiento)
-        else if (modo === 'capacitador') {
-            celdasExtra = `
-                <td colspan="2"><input type="url" class="input-evidencia" placeholder="URL de Material Didáctico o Guía..." value="${control.link_evidencia || ''}"></td>`;
-        } 
-        // FOCO: LA VERIFICACIÓN (Auditoría)
-        else { 
-            celdasExtra = `
-                <td>
-                    <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
-                    </select>
-                </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Hallazgo..."></td>`;
-        }
+            <section id="implementador" class="role-section" style="display: none;">
+                <h2>Gestión de Implementación</h2>
+                <p>Tareas técnicas: Configure y asigne responsables a los controles.</p>
+            </section>
 
-        tr.innerHTML = `
-            <td>${control.codigo}</td>
-            <td>${control.nombre_control}</td>
-            <td>${control.categoria || 'General'}</td>
-            ${celdasExtra} 
-        `;
-        tbody.appendChild(tr);
-    });
-}
+            <table class="checklist-table" style="width: 100%; margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Control</th>
+                        <th>Categoría</th>
+                        <th id="th-estado">Estado</th>
+                        <th id="th-accion">Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody id="controlesBody">
+                    </tbody>
+            </table>
 
-// ==========================================
-// 3. GUARDAR PROGRESO (Envío de avances)
-// ==========================================
-async function guardarProgreso() {
-    const btn = document.getElementById('btnGuardar');
-    const tbody = document.getElementById('controlesBody');
-    const filas = tbody.querySelectorAll('tr');
+        </main>
+    </div>
 
-    const avances = Array.from(filas).map(fila => ({
-        control_id: fila.dataset.id, 
-        estado: fila.querySelector('.status-select')?.value || null,
-        observaciones: fila.querySelector('.input-observacion')?.value || null,
-        responsable: fila.querySelector('.input-responsable')?.value || null,
-        fecha_limite: fila.querySelector('.input-fecha')?.value || null,
-        link_evidencia: fila.querySelector('.input-evidencia')?.value || null
-    }));
-
-    try {
-        btn.innerHTML = '<span>⏳</span> Guardando...';
-        btn.disabled = true;
-
-        const response = await fetch('/api/controles/guardar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ avances })
-        });
-
-        if (response.ok) {
-            alert("✅ Progreso guardado: Acciones del Implementador/Capacitador registradas.");
-        } else {
-            const err = await response.json();
-            alert("❌ Error: " + err.mensaje);
-        }
-    } catch (e) {
-        alert("🚫 Error de conexión.");
-    } finally {
-        btn.innerHTML = '<span>💾</span> Guardar progreso';
-        btn.disabled = false;
-    }
-}
-
-
-// 4. GESTIÓN DE ROLES E INTERFAZ
-
-function showTab(roleId) {
-    const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
-    if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
-
-    document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    const seccion = document.getElementById(roleId);
-    if (seccion) seccion.style.display = 'block';
-    document.getElementById(`tab-${roleId}`)?.classList.add('active');
-
-    // Cambiamos los encabezados para que tengan sentido con tu definición
-    const thEstado = document.getElementById('th-estado');
-    const thAccion = document.getElementById('th-accion');
-
-    if (roleId === 'capacitador') {
-        thEstado.textContent = 'Enfoque: Enseñar'; thAccion.textContent = 'Material de Apoyo / Link';
-    } else if (roleId === 'implementador') {
-        thEstado.textContent = 'Enfoque: Hacer'; thAccion.textContent = 'Fecha Programada';
-    } else {
-        thEstado.textContent = 'Verificación'; thAccion.textContent = 'Observaciones';
-    }
-
-    renderizarTabla(roleId);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const rol = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
-    document.getElementById('userNameDisplay').textContent = localStorage.getItem('userName');
-    document.getElementById('userRoleDisplay').textContent = rol;
-    cargarControles();
-});
-
-async function cargarControles() {
-    const response = await fetch('/api/controles', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    window.datosControlesGlobal = await response.json();
-    showTab(localStorage.getItem('userRole').toLowerCase());
-}
+    <script src="../js/dashboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>
