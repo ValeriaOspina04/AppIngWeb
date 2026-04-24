@@ -31,17 +31,17 @@ exports.guardarProgreso = async (req, res) => {
             link_evidencia = IFNULL(VALUES(link_evidencia), link_evidencia)
         `;
 
-        for (const ctrl of controles) {
-            await db.query(sql, [
-                empresa_id, 
+        await Promise.all(controles.map(ctrl => 
+            db.query(sql, [
+                req.user.empresa_id, 
                 ctrl.control_id, 
-                ctrl.estado, 
-                ctrl.observaciones, 
-                ctrl.responsable, 
-                ctrl.fecha_limite, 
-                ctrl.link_evidencia
-            ]);
-        }
+                ctrl.estado || 'No Iniciado', 
+                ctrl.observaciones || null, 
+                ctrl.responsable || null, 
+                ctrl.fecha_limite || null, 
+                ctrl.link_evidencia || null
+            ])
+        ));
 
         res.json({ mensaje: "Progreso actualizado correctamente" });
     } catch (error) {
