@@ -12,19 +12,21 @@ app.use(express.json());
 // Esta es la clave: 
 // '__dirname' es la carpeta 'backend'. 
 // '..' sale de 'backend' para encontrar 'frontend'.
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use(express.static(path.join(__dirname, "frontend")));
+// Servir específicamente las páginas dentro de frontend/pages
+app.use(express.static(path.join(__dirname, "frontend/pages")));
 
-// Rutas de navegación
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'login.html'));
+// Rutas amigables
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend/pages/login.html"));
 });
 
-app.get('/registro', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'registro.html'));
+app.get("/dashboard", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend/pages/dashboard.html"));
 });
 
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'dashboard.html'));
+app.get("/registro", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend/pages/registro.html"));
 });
 
 app.use('/api/auth', authRoutes);
