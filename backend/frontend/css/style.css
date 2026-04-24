@@ -320,3 +320,58 @@ h2 {
     width: 100%;
     border-collapse: collapse;
 }
+
+/* --- ESTILOS PARA EL MENÚ DESPLEGABLE --- */
+
+.sidebar-menu {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.dropdown-btn {
+    width: 100%;
+    padding: 12px 15px;
+    background: transparent; /* Se adapta al fondo de tu sidebar */
+    color: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.3s;
+}
+
+.dropdown-btn:hover {
+    background: rgba(255, 255, 255, 0.1); /* Un brillo sutil al pasar el mouse */
+}
+
+/* Contenedor de botones internos */
+.dropdown-container {
+    display: none; /* Se activa con el JS */
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.1); /* Un fondo un poco más oscuro para diferenciar */
+    padding-left: 10px; /* Sangría para los hijos */
+}
+
+/* Ajuste para los botones que ya tenías (.tab-btn) */
+.dropdown-container .tab-btn {
+    width: 100%;
+    padding: 10px 15px;
+    margin: 2px 0;
+    font-size: 14px;
+    background: transparent;
+    border-radius: 0; /* Quitamos bordes redondeados para que se vea como lista */
+}
+
+/* Icono de flecha */
+.arrow {
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.arrow.rotate {
+    transform: rotate(180deg);
+}
