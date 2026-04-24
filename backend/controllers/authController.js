@@ -2,12 +2,12 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Registro de Empresa y Usuario (Representante Legal)
+// --- REGISTRO DE EMPRESA Y USUARIO ---
 exports.registrar = async (req, res) => {
     const { nombre, correo, password, rol, nombre_empresa, representante_legal, tipo_empresa } = req.body;
     
     try {
-        // 1. Encriptar contraseña
+        // 1. Encriptar contraseña (Para que sea seguro)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -31,10 +31,12 @@ exports.registrar = async (req, res) => {
     }
 };
 
-// Login
+// --- LOGIN DE USUARIO ---
 exports.login = async (req, res) => {
     const { correo, password } = req.body;
+    
     try {
+        // 1. Buscar al usuario por correo
         const [rows] = await db.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
         
         if (rows.length === 0) {
@@ -43,22 +45,36 @@ exports.login = async (req, res) => {
         
         const user = rows[0];
         
-        // ¡OJO AQUÍ! Si insertaste el usuario manual en Workbench con '123456'
-        // y aquí usas bcrypt.compare, VA A FALLAR.
-        // Para pruebas rápidas, compara directo si no has encriptado:
-        if (password !== user.password) { 
+        // 2. Comparar contraseña encriptada
+        // bcrypt.compare toma la clave plana y la compara con el hash de la DB
+        const validPassword = await bcrypt.compare(password, user.password);
+        
+        if (!validPassword) { 
             return res.status(401).json({ mensaje: "Contraseña incorrecta" });
         }
-        // Crear Token incluyendo el ROL
+
+        // 3. Generar el Token JWT
+        // Usamos un valor por defecto por si falta la variable en Render
+        const secret = process.env.JWT_SECRET || 'clave_secreta_temporal';
+
         const token = jwt.sign(
             { id: user.id, rol: user.rol }, 
-            process.env.JWT_SECRET, 
+            secret, 
             { expiresIn: '8h' }
         );
 
-        res.json({ token, rol: user.rol, nombre: user.nombre });
+        // 4. Responder con los datos necesarios para el frontend
+        res.json({ 
+            token, 
+            rol: user.rol, 
+            nombre: user.nombre 
+        });
+
     } catch (error) {
-    console.error("DETALLE DEL ERROR:", error); // Esto aparecerá en tu terminal de Node
-    res.status(500).json({ mensaje: "Error interno", detalle: error.message });
-}
+        console.error("DETALLE DEL ERROR EN LOGIN:", error);
+        res.status(500).json({ 
+            mensaje: "Error interno", 
+            detalle: error.message 
+        });
+    }
 };
