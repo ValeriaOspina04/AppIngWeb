@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - ISO Secure 27001</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
@@ -14,8 +15,7 @@
         <button onclick="logout()" class="btn-logout">Cerrar Sesión</button>
     </header>
 
-    <div class="main-layout" >
-
+    <div class="main-layout">
         <nav class="sidebar-nav">
             <button class="tab-btn" onclick="showTab('home')">🏠 Inicio</button>
 
@@ -34,33 +34,38 @@
 
         <main class="dashboard-content">
 
-            <section id="auditor" class="role-section active">
+            <section id="auditor" class="role-section">
                 <h2>Checklist de Evaluación ISO 27001</h2>
                 <p>Auditoría de cumplimiento: Seleccione el estado de cada control.</p>
-                <div class="actions-bar">
-                    <button onclick="generarReporte()" class="btn btn-secondary"><span>📊</span> Generar Reporte</button>
-                    <button type="button" id="btnGuardar" class="btn btn-success" onclick="guardarProgreso()"><span>💾</span> Guardar progreso</button>
-                </div>
             </section>
 
             <section id="capacitador" class="role-section" style="display: none;">
                 <h2>Centro de Capacitación</h2>
-                <p>Evidencias y Formación: Suba el material de apoyo para cada control.</p>
-                </section>
+                <p>Evidencias y Formación: Gestione el material de enseñanza para cada control.</p>
+            </section>
 
             <section id="implementador" class="role-section" style="display: none;">
                 <h2>Gestión de Implementación</h2>
-                <p>Tareas técnicas: Configure y asigne responsables a los controles.</p>
+                <p>Tareas técnicas: Configure, ponga en marcha y asigne responsables.</p>
             </section>
 
-            <table class="checklist-table" style="width: 100%; margin-top: 20px;">
+            <div class="actions-bar" style="margin: 20px 0; display: flex; gap: 10px;">
+                <button onclick="generarReporte()" class="btn btn-secondary">
+                    <span>📊</span> Generar Reporte PDF
+                </button>
+                <button type="button" id="btnGuardar" class="btn btn-success" onclick="guardarProgreso()">
+                    <span>💾</span> Guardar Progreso Actual
+                </button>
+            </div>
+
+            <table class="checklist-table" id="tablaIso" style="width: 100%; margin-top: 10px;">
                 <thead>
                     <tr>
                         <th>Código</th>
                         <th>Control</th>
                         <th>Categoría</th>
                         <th id="th-estado">Estado</th>
-                        <th id="th-accion">Observaciones</th>
+                        <th id="th-accion">Observaciones / Evidencia</th>
                     </tr>
                 </thead>
                 <tbody id="controlesBody">
@@ -70,8 +75,9 @@
         </main>
     </div>
 
-    <script src="../js/dashboard.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
+    <script src="../js/dashboard.js"></script>
 </body>
 </html>
