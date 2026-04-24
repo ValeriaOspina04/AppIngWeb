@@ -14,15 +14,10 @@ exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
         
-        if (!req.session.user) {
+        if (!user) {
             return res.status(401).json({ mensaje: "No autenticado" });
         }
-        const id_empresa = req.session.user.id_empresa;
-
-        if (empresa.length === 0) {
-            return res.status(404).json({ mensaje: "Empresa no encontrada: " + nombre_empresa });
-        }
-
+        const id_empresa = user.id_empresa;
 
         const sql = `
             INSERT INTO progreso_checklist 
