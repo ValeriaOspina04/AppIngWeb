@@ -1,61 +1,97 @@
 window.datosControlesGlobal = [];
 
-// ==========================================
-// 1. FUNCIÓN: GENERAR REPORTE PDF
-// ==========================================
+// 1. CARGA INICIAL (Restauramos el nombre y el rol en pantalla)
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+
+    // --- RESTAURADO: Mostrar datos en el header ---
+    const nombreElemento = document.getElementById('userNameDisplay');
+    const rolElemento = document.getElementById('userRoleDisplay');
+    
+    if (nombreElemento) nombreElemento.textContent = localStorage.getItem('userName') || 'Usuario';
+    if (rolElemento) rolElemento.textContent = localStorage.getItem('userRole') || 'Rol';
+
+    cargarControles();
+    restringirAccesosPorRol(); // Ejecuta la lógica de ocultar/mostrar botones según rol
+});
+
+// 2. FUNCIÓN DE RENDERIZADO (Con las clases de captura correctas)
+function renderizarTabla(modo) {
+    const tbody = document.getElementById('controlesBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    window.datosControlesGlobal.forEach(control => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-id', control.control_id || control.id);
+
+        let celdasExtra = '';
+        
+        if (modo === 'implementador') {
+            celdasExtra = `
+                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Nombre..."></td>
+                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
+        } else if (modo === 'capacitador') {
+            celdasExtra = `
+                <td colspan="2"><input type="url" class="input-evidencia" placeholder="Link de evidencia..." value="${control.link_evidencia || ''}"></td>`;
+        } else { // Auditor por defecto
+            celdasExtra = `
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Obs..."></td>`;
+        }
+
+        tr.innerHTML = `
+            <td>${control.codigo}</td>
+            <td>${control.nombre_control}</td>
+            <td>${control.categoria || 'General'}</td>
+            ${celdasExtra} 
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// 3. GENERAR PDF (Horizontal para el reporte final)
 function generarPDF() {
     const { jsPDF } = window.jspdf;
-    // Usamos 'l' (landscape/horizontal) para que quepan todas las columnas de los roles
     const doc = new jsPDF('l', 'mm', 'a4'); 
 
-    // Configuración estética del reporte
-    doc.setFontSize(18);
-    doc.setTextColor(19, 190, 216); // Tu azul institucional
+    doc.setFontSize(16);
     doc.text("Reporte de Cumplimiento ISO 27001", 14, 15);
     
     doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Empresa: ${localStorage.getItem('empresaNombre') || 'Gestión ISO'}`, 14, 22);
-    doc.text(`Auditor Responsable: ${localStorage.getItem('userName')}`, 14, 27);
-    doc.text(`Fecha de Reporte: ${new Date().toLocaleDateString()}`, 14, 32);
+    doc.text(`Generado por: ${localStorage.getItem('userName')}`, 14, 25);
 
-    // Generar la tabla automáticamente desde el HTML
     doc.autoTable({
-        html: '.checklist-table', // Selecciona tu tabla por clase
-        startY: 40,
+        html: '.checklist-table',
+        startY: 30,
         theme: 'grid',
-        headStyles: { 
-            fillColor: [19, 190, 216], 
-            textColor: [255, 255, 255],
-            fontStyle: 'bold'
-        },
-        styles: { fontSize: 8, cellPadding: 3 },
-        // Esta parte convierte los inputs y selects en texto plano para el PDF
+        headStyles: { fillColor: [19, 190, 216] },
         didParseCell: function(data) {
-            const element = data.cell.raw;
-            if (element && element.querySelector) {
-                const input = element.querySelector('input');
-                const select = element.querySelector('select');
-                if (input) data.cell.text = [input.value];
-                if (select) data.cell.text = [select.value];
-            }
+            // Esto asegura que los valores de los inputs salgan en el PDF
+            const input = data.cell.raw.querySelector?.('input, select');
+            if (input) data.cell.text = [input.value];
         }
     });
 
-    // Descargar el archivo
-    doc.save(`Reporte_ISO27001_${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.save("Reporte_ISO27001.pdf");
 }
 
-// ==========================================
-// 2. FUNCIÓN: GUARDAR PROGRESO (AVANCES)
-// ==========================================
+// 4. GUARDAR PROGRESO (Corregido para el endpoint de Render)
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const textoOriginal = btn.innerHTML;
     const tbody = document.getElementById('controlesBody');
     const filas = tbody.querySelectorAll('tr');
-    
-    if (filas.length === 0) return alert("No hay datos para guardar.");
 
     const avances = Array.from(filas).map(fila => ({
         control_id: fila.dataset.id, 
@@ -81,102 +117,50 @@ async function guardarProgreso() {
 
         if (response.ok) {
             btn.innerHTML = '<span>✅</span> ¡Éxito!';
-            setTimeout(() => {
-                btn.innerHTML = textoOriginal;
-                btn.disabled = false;
-            }, 2000);
-            alert("✅ Progreso guardado correctamente.");
+            setTimeout(() => { btn.innerHTML = textoOriginal; btn.disabled = false; }, 2000);
+            alert("¡Progreso guardado!");
         } else {
-            throw new Error("Error en el servidor");
+            const data = await response.json();
+            alert("Error: " + data.mensaje);
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
         }
     } catch (error) {
-        alert("❌ Error al guardar.");
+        alert("Error de conexión");
         btn.innerHTML = textoOriginal;
         btn.disabled = false;
     }
 }
 
-// ==========================================
-// 3. RENDERIZADO Y NAVEGACIÓN
-// ==========================================
-function renderizarTabla(modo) {
-    const tbody = document.getElementById('controlesBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    window.datosControlesGlobal.forEach(control => {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-id', control.control_id || control.id);
-
-        let celdasExtra = '';
-        if (modo === 'implementador') {
-            celdasExtra = `
-                <td><input type="text" class="input-responsable" value="${control.responsable || ''}"></td>
-                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
-        } else if (modo === 'capacitador') {
-            celdasExtra = `
-                <td colspan="2"><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link Drive/Docs"></td>`;
-        } else { // Auditor
-            celdasExtra = `
-                <td>
-                    <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
-                    </select>
-                </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
-        }
-
-        tr.innerHTML = `
-            <td>${control.codigo}</td>
-            <td>${control.nombre_control}</td>
-            <td>${control.categoria || 'General'}</td>
-            ${celdasExtra} 
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
+// --- RESTO DE FUNCIONES DE NAVEGACIÓN ---
 function showTab(roleId) {
     const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
     if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
 
-    // Lógica de visibilidad de pestañas
     document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-    const target = document.getElementById(roleId);
-    if (target) target.style.display = 'block';
+    const seccion = document.getElementById(roleId);
+    if (seccion) seccion.style.display = 'block';
     document.getElementById(`tab-${roleId}`)?.classList.add('active');
-
-    // Cambiar etiquetas de las columnas
-    const thEstado = document.getElementById('th-estado');
-    const thAccion = document.getElementById('th-accion');
-
-    if (roleId === 'capacitador') {
-        thEstado.textContent = 'Evidencias'; thAccion.textContent = 'Link de Acceso';
-    } else if (roleId === 'implementador') {
-        thEstado.textContent = 'Responsable'; thAccion.textContent = 'Fecha Límite';
-    } else {
-        thEstado.textContent = 'Estado'; thAccion.textContent = 'Observaciones';
-    }
 
     renderizarTabla(roleId);
 }
 
-// Carga inicial
-document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('token')) { window.location.href = '/'; return; }
-    
-    document.getElementById('userNameDisplay').textContent = localStorage.getItem('userName');
-    cargarControles();
-});
-
 async function cargarControles() {
-    const response = await fetch('/api/controles', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    window.datosControlesGlobal = await response.json();
-    showTab(localStorage.getItem('userRole').toLowerCase());
+    try {
+        const response = await fetch('/api/controles', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const controles = await response.json();
+        window.datosControlesGlobal = controles;
+        
+        const rolActual = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
+        renderizarTabla(rolActual);
+    } catch (e) { console.error(e); }
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/';
 }
