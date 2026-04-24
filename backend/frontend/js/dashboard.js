@@ -1,39 +1,37 @@
 window.datosControlesGlobal = [];
 
-// ==========================================
-// 1. GENERAR REPORTE PDF (Horizontal)
-// ==========================================
-function generarPDF() {
+// 1. GENERAR REPORTE PDF
+async function generarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'mm', 'a4'); 
 
     doc.setFontSize(16);
     doc.setTextColor(19, 190, 216);
-    doc.text("Plan de Implementación y Capacitación ISO 27001", 14, 15);
+    doc.text("Reporte ISO 27001 - Gestión de Controles", 14, 15);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Generado por: ${localStorage.getItem('userName')}`, 14, 22);
+    doc.text(`Generado por: ${localStorage.getItem('userName') || 'Usuario'}`, 14, 22);
 
     doc.autoTable({
-        html: 'table', // Captura la tabla actual que esté en pantalla
+        html: 'table',
         startY: 30,
         theme: 'grid',
         headStyles: { fillColor: [19, 190, 216] },
         styles: { fontSize: 7 },
         didParseCell: function(data) {
-            // Captura valores de inputs/selects para que no salgan vacíos en el PDF
-            const input = data.cell.raw.querySelector?.('input, select');
-            if (input) data.cell.text = [input.value];
+            const el = data.cell.raw;
+            if (el && el.querySelector) {
+                const val = el.querySelector('input')?.value || el.querySelector('select')?.value;
+                if (val !== undefined) data.cell.text = [val];
+            }
         }
     });
 
-    doc.save(`Reporte_ISO27001_${new Date().toLocaleDateString()}.pdf`);
+    doc.save("Reporte_ISO27001.pdf");
 }
 
-// ==========================================
-// 2. RENDERIZAR TABLA (Implementador vs Capacitador)
-// ==========================================
+// 2. RENDERIZAR TABLA (Implementador = Hacer)
 function renderizarTabla(modo) {
     const tbody = document.getElementById('controlesBody');
     if (!tbody) return;
@@ -45,19 +43,17 @@ function renderizarTabla(modo) {
 
         let celdasExtra = '';
         
-        // FOCO: EL HACER (Configuración y Puesta en marcha)
         if (modo === 'implementador') {
+            // El implementador pone quién LO HACE y CUÁNDO
             celdasExtra = `
-                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Técnico a cargo..."></td>
+                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Quién lo configura..."></td>
                 <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
-        } 
-        // FOCO: EL ENSEÑAR (Material y Conocimiento)
-        else if (modo === 'capacitador') {
+        } else if (modo === 'capacitador') {
+            // El capacitador pone el LINK de lo que ENSEÑÓ
             celdasExtra = `
-                <td colspan="2"><input type="url" class="input-evidencia" placeholder="URL de Material Didáctico o Guía..." value="${control.link_evidencia || ''}"></td>`;
-        } 
-        // FOCO: LA VERIFICACIÓN (Auditoría)
-        else { 
+                <td colspan="2"><input type="url" class="input-evidencia" placeholder="Link de capacitación..." value="${control.link_evidencia || ''}"></td>`;
+        } else {
+            // El auditor ve el ESTADO legal
             celdasExtra = `
                 <td>
                     <select class="status-select">
@@ -66,7 +62,7 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
                     </select>
                 </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Hallazgo..."></td>`;
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Nota de auditoría"></td>`;
         }
 
         tr.innerHTML = `
@@ -79,9 +75,7 @@ function renderizarTabla(modo) {
     });
 }
 
-// ==========================================
-// 3. GUARDAR PROGRESO (Envío de avances)
-// ==========================================
+// 3. GUARDAR PROGRESO
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const tbody = document.getElementById('controlesBody');
@@ -97,9 +91,7 @@ async function guardarProgreso() {
     }));
 
     try {
-        btn.innerHTML = '<span>⏳</span> Guardando...';
         btn.disabled = true;
-
         const response = await fetch('/api/controles/guardar', {
             method: 'POST',
             headers: {
@@ -110,59 +102,71 @@ async function guardarProgreso() {
         });
 
         if (response.ok) {
-            alert("✅ Progreso guardado: Acciones del Implementador/Capacitador registradas.");
+            alert("✅ Guardado correctamente");
         } else {
             const err = await response.json();
             alert("❌ Error: " + err.mensaje);
         }
     } catch (e) {
-        alert("🚫 Error de conexión.");
+        alert("🚫 Error de conexión");
     } finally {
-        btn.innerHTML = '<span>💾</span> Guardar progreso';
         btn.disabled = false;
     }
 }
 
-// ==========================================
-// 4. GESTIÓN DE ROLES E INTERFAZ
-// ==========================================
+// 4. CAMBIO DE ROL
 function showTab(roleId) {
-    const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
-    if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
+    const rolActual = (localStorage.getItem('userRole') || '').toLowerCase();
+    if (rolActual !== 'admin' && rolActual !== roleId) return;
 
     document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
     const seccion = document.getElementById(roleId);
     if (seccion) seccion.style.display = 'block';
+    
     document.getElementById(`tab-${roleId}`)?.classList.add('active');
 
-    // Cambiamos los encabezados para que tengan sentido con tu definición
     const thEstado = document.getElementById('th-estado');
     const thAccion = document.getElementById('th-accion');
 
     if (roleId === 'capacitador') {
-        thEstado.textContent = 'Enfoque: Enseñar'; thAccion.textContent = 'Material de Apoyo / Link';
+        thEstado.textContent = 'Enfoque: Enseñar'; 
+        thAccion.textContent = 'Material / Evidencia';
     } else if (roleId === 'implementador') {
-        thEstado.textContent = 'Enfoque: Hacer'; thAccion.textContent = 'Fecha Programada';
+        thEstado.textContent = 'Enfoque: Hacer'; 
+        thAccion.textContent = 'Fecha Límite';
     } else {
-        thEstado.textContent = 'Verificación'; thAccion.textContent = 'Observaciones';
+        thEstado.textContent = 'Estado'; 
+        thAccion.textContent = 'Observaciones';
     }
 
     renderizarTabla(roleId);
 }
 
+// 5. INICIO AL CARGAR
 document.addEventListener('DOMContentLoaded', () => {
-    const rol = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
-    document.getElementById('userNameDisplay').textContent = localStorage.getItem('userName');
-    document.getElementById('userRoleDisplay').textContent = rol;
+    const userName = localStorage.getItem('userName');
+    const userRole = localStorage.getItem('userRole');
+
+    if (document.getElementById('userNameDisplay')) 
+        document.getElementById('userNameDisplay').textContent = userName || 'Usuario';
+    
+    if (document.getElementById('userRoleDisplay')) 
+        document.getElementById('userRoleDisplay').textContent = userRole || 'Rol';
+
     cargarControles();
 });
 
 async function cargarControles() {
-    const response = await fetch('/api/controles', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    window.datosControlesGlobal = await response.json();
-    showTab(localStorage.getItem('userRole').toLowerCase());
+    try {
+        const res = await fetch('/api/controles', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        window.datosControlesGlobal = await res.json();
+        const rol = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
+        showTab(rol);
+    } catch (e) {
+        console.error("Error:", e);
+    }
 }
