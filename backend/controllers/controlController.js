@@ -23,6 +23,24 @@ exports.obtenerControles = async (req, res) => {
     }
 };
 
+exports.subirArchivo = async (req, res) => {
+    try {
+        const { control_id, nombre_empresa } = req.body;
+        const archivoRuta = req.file.path; // Ruta donde Multer guardó el archivo
+
+        const sql = `
+            UPDATE progreso_checklist 
+            SET link_evidencia = ? 
+            WHERE control_id = ? AND nombre_empresa = ?`;
+
+        await db.query(sql, [archivoRuta, control_id, nombre_empresa]);
+
+        res.json({ mensaje: "Archivo cargado con éxito", ruta: archivoRuta });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al subir archivo" });
+    }
+};
+
 exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
