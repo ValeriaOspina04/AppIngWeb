@@ -11,19 +11,21 @@ app.use(express.json());
 
 // 1. Servir archivos estáticos (CSS, JS, Imágenes)
 // Salimos de 'backend' con '..' para encontrar 'frontend'
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // 2. Rutas para las páginas HTML
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/pages/login.html'));
+    // IMPORTANTE: Asegúrate de que la carpeta se llame 'frontend' (minúscula) 
+    // y 'pages' (minúscula). Linux distingue entre Mayúsculas y Minúsculas.
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'login.html'));
 });
 
 app.get('/registro', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/pages/registro.html'));
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'registro.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/pages/dashboard.html'));
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'dashboard.html'));
 });
 
 // 3. Rutas de la API
