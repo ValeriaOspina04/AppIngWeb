@@ -127,7 +127,7 @@ async function guardarProgreso() {
         estado: f.querySelector('.status-select')?.value || 'No Iniciado',
         observaciones: f.querySelector('.input-observacion')?.value || null,
         responsable: f.querySelector('.input-responsable')?.value || null,
-        fecha_limite: f.querySelector('.input-fecha')?.value || null,
+        fecha_limite: (fechaVal && fechaVal.trim() !== "") ? fechaVal : null,
         link_evidencia: f.querySelector('.input-evidencia')?.value || null
     }));
 
