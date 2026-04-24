@@ -9,31 +9,43 @@ exports.obtenerControles = async (req, res) => {
     }
 };
 
-exports.guardarAvances = async (req, res) => {
-    const { avances } = req.body; // Es el array que enviamos desde el JS del frontend
-    const usuario_id = req.user.id; // Obtenido del token JWT a través del middleware
+exports.guardarProgreso = async (req, res) => {
+    const { controles } = req.body;
+    const empresa_id = req.user.empresa_id; // Extraído del middleware de Auth
+
+    if (!controles || !Array.isArray(controles)) {
+        return res.status(400).json({ mensaje: "Datos inválidos" });
+    }
 
     try {
-        // Iniciamos una transacción para asegurar que no haya datos a medias
-        await Promise.all(avances.map(item => {
-            return db.query(
-                `INSERT INTO progreso_checklist 
-                    (control_id, usuario_id, estado, observaciones, fecha_actualizacion) 
-                VALUES (?, ?, ?, ?, NOW()) 
-                ON DUPLICATE KEY UPDATE 
-                    estado = VALUES(estado), 
-                    observaciones = VALUES(observaciones), 
-                    fecha_actualizacion = NOW()`,
-                [item.control_id, usuario_id, item.estado, item.observaciones]
-            );
-        }));
+        // Query con ON DUPLICATE KEY UPDATE para que actualice si ya existe
+        const sql = `
+            INSERT INTO progreso_checklist 
+            (empresa_id, control_id, estado, observaciones, responsable, fecha_limite, link_evidencia) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+            estado = IFNULL(VALUES(estado), estado),
+            observaciones = IFNULL(VALUES(observaciones), observaciones),
+            responsable = IFNULL(VALUES(responsable), responsable),
+            fecha_limite = IFNULL(VALUES(fecha_limite), fecha_limite),
+            link_evidencia = IFNULL(VALUES(link_evidencia), link_evidencia)
+        `;
 
-        await db.query('COMMIT');
+        for (const ctrl of controles) {
+            await db.query(sql, [
+                empresa_id, 
+                ctrl.control_id, 
+                ctrl.estado, 
+                ctrl.observaciones, 
+                ctrl.responsable, 
+                ctrl.fecha_limite, 
+                ctrl.link_evidencia
+            ]);
+        }
 
-        res.json({ mensaje: "Progreso guardado exitosamente" });
+        res.json({ mensaje: "Progreso actualizado correctamente" });
     } catch (error) {
-        await db.query('ROLLBACK');
-        console.error("error en el guardado:", error);
-        res.status(500).json({ mensaje: "Error interno al guardar los avances", detalle: error.message });
+        console.error("Error en DB:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor", detalle: error.message });
     }
 };
