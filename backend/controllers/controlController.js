@@ -12,8 +12,8 @@ exports.obtenerControles = async (req, res) => {
 
 exports.guardarProgreso = async (req, res) => {
     try {
-        console.log(req.session);
         const { controles } = req.body;
+        
         if (!req.session.user) {
             return res.status(401).json({ mensaje: "No autenticado" });
         }
@@ -23,7 +23,6 @@ exports.guardarProgreso = async (req, res) => {
             return res.status(404).json({ mensaje: "Empresa no encontrada: " + nombre_empresa });
         }
 
-       const id_empresa = empresa[0].id_empresa;
 
         const sql = `
             INSERT INTO progreso_checklist 
