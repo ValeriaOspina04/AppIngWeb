@@ -36,41 +36,47 @@ exports.login = async (req, res) => {
     const { correo, password } = req.body;
     
     try {
-        // 1. Buscar al usuario por correo
-        const [rows] = await db.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
+        // 1. Buscamos usuario Y traemos de una vez el id_empresa y nombre_empresa
+        // Hacemos un JOIN porque el ID de la empresa está en la tabla 'empresas'
+        const sql = `
+            SELECT u.*, e.id_empresa, e.nombre_empresa 
+            FROM usuarios u
+            LEFT JOIN empresas e ON u.id = e.usuario_id
+            WHERE u.correo = ?
+        `;
+        
+        const [rows] = await db.query(sql, [correo]);
         
         if (rows.length === 0) {
             return res.status(401).json({ mensaje: "Usuario no encontrado" });
         }
         
-        const user = rows[0];
+        const user = rows[0]; // Usamos 'user' que es la variable que sí existe
         
-        // 2. Comparar contraseña encriptada
-        // bcrypt.compare toma la clave plana y la compara con el hash de la DB
+        // 2. Comparar contraseña
         const validPassword = await bcrypt.compare(password, user.password);
         
         if (!validPassword) { 
             return res.status(401).json({ mensaje: "Contraseña incorrecta" });
         }
 
-        // 3. Generar el Token JWT
-        // Usamos un valor por defecto por si falta la variable en Render
-        const secret = process.env.JWT_SECRET;
-
+        // 3. Generar el Token JWT con los datos corregidos
         const token = jwt.sign(
             { 
-                id: usuario.id, 
-                id_empresa: usuario.id_empresa // <--- ¡ESTO ES VITAL!
+                id: user.id, 
+                id_empresa: user.id_empresa, // Ahora sí viene del JOIN
+                rol: user.rol 
             }, 
-            process.env.JWT_SECRET, 
+            process.env.JWT_SECRET || 'clave_secreta_provisoria', 
             { expiresIn: '24h' }
         );
 
-        // 4. Responder con los datos necesarios para el frontend
+        // 4. Responder al frontend
         res.json({ 
             token, 
             rol: user.rol, 
-            nombre: user.nombre 
+            nombre: user.nombre,
+            nombre_empresa: user.nombre_empresa // Lo enviamos para el localStorage
         });
 
     } catch (error) {
