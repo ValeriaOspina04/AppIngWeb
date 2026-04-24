@@ -13,12 +13,17 @@ exports.obtenerControles = async (req, res) => {
 exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
+        const user = obtenerUsuario(req);
         
         if (!user) {
             return res.status(401).json({ mensaje: "No autenticado" });
         }
         const id_empresa = user.id_empresa;
 
+         if (!id_empresa) {
+            return res.status(400).json({ mensaje: "Usuario sin empresa" });
+        }
+        
         const sql = `
             INSERT INTO progreso_checklist 
             (id_empresa, control_id, estado, observaciones, responsable, fecha_limite, link_evidencia) 
