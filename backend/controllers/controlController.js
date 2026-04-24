@@ -14,11 +14,17 @@ exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
         // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
-       const id_empresa = req.user.id_empresa; 
+       // 1. Buscamos el id_empresa usando el nombre
+        const [empresa] = await db.query(
+            'SELECT id_empresa FROM empresas WHERE nombre_empresa = ?', 
+            [nombre_empresa]
+        );
 
-        if (!id_empresa) {
-            return res.status(401).json({ mensaje: "No se encontró ID de empresa en la sesión" });
+        if (empresa.length === 0) {
+            return res.status(404).json({ mensaje: "Empresa no encontrada: " + nombre_empresa });
         }
+
+        const id_actual = empresa[0].id_empresa;
 
         const sql = `
             INSERT INTO progreso_checklist 
