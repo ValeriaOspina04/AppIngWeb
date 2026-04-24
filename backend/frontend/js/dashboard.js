@@ -142,7 +142,11 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Realizado' ? 'selected' : ''}>Realizado</option>
                     </select>
                 </td>
-                <td><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link material" style="width: 100%;"></td>`;
+                <td><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link material" style="width: 100%;">
+                <input type="file" class="input-archivo" data-control="${control.control_id}">
+                <small id="status-${control.control_id}">${control.link_evidencia ? '✅ Archivo subido' : ''}</small>
+                </td>`;
+                
         } else {
             // Modo Auditor (default para admin/todos)
             celdasExtra = `
