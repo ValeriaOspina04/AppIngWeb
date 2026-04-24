@@ -218,46 +218,40 @@ async function cargarControles() {
 }
 
 function restringirAccesosPorRol() {
-    // 1. Obtenemos el rol y lo pasamos a minúsculas para comparar seguro
-    const rolGuardado = localStorage.getItem('userRole') || '';
-    const rol = rolGuardado.toLowerCase().trim();
+    // 1. Obtener el rol y normalizarlo
+    const rolRaw = localStorage.getItem('userRole') || '';
+    const rol = rolRaw.toLowerCase().trim();
     
-    console.log("Rol detectado:", rol);
+    console.log("Aplicando restricciones para el rol:", rol);
 
-    // 2. Referencias a los botones (asegúrate que los IDs coincidan con el HTML)
+    // 2. Referencias a los botones de la barra lateral (Tabs)
     const btnAuditor = document.getElementById('tab-auditor');
     const btnCapacitador = document.getElementById('tab-capacitador');
     const btnImplementador = document.getElementById('tab-implementador');
 
-    // Validamos que los botones existan antes de tocarlos para evitar errores
-    if (!btnAuditor || !btnCapacitador || !btnImplementador) {
-        console.error("No se encontraron los botones de la sidebar en el HTML.");
-        return;
-    }
+    // 3. OCULTAR TODO POR DEFECTO
+    if (btnAuditor) btnAuditor.style.display = 'none';
+    if (btnCapacitador) btnCapacitador.style.display = 'none';
+    if (btnImplementador) btnImplementador.style.display = 'none';
 
-    // 3. OCULTAR TODO PRIMERO
-    btnAuditor.style.display = 'none';
-    btnCapacitador.style.display = 'none';
-    btnImplementador.style.display = 'none';
-
-    // 4. MOSTRAR SEGÚN EL ROL
-    if (rol === 'auditor') {
-        btnAuditor.style.display = 'block';
-        showTab('auditor'); // Activa la pestaña de auditoría
+    // 4. MOSTRAR SOLO LO PERMITIDO
+    if (rol === 'implementador') {
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('implementador'); // Forzamos a que abra su pestaña
     } 
     else if (rol === 'capacitador') {
-        btnCapacitador.style.display = 'block';
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
         showTab('capacitador');
     } 
-    else if (rol === 'implementador') {
-        btnImplementador.style.display = 'block';
-        showTab('implementador');
-    } 
+    else if (rol === 'auditor') {
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        showTab('auditor');
+    }
     else if (rol === 'admin') {
-        // El admin ve todo
-        btnAuditor.style.display = 'block';
-        btnCapacitador.style.display = 'block';
-        btnImplementador.style.display = 'block';
-        showTab('auditor'); // Por defecto abre auditoría
+        // El admin si puede ver todo
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('auditor');
     }
 }
