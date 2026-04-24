@@ -16,24 +16,22 @@
 
     <div class="main-layout" >
         
-        <div class="sidebar-menu">
-            <button class="dropdown-btn" onclick="toggleMenu()">
-                <span class="icon">⚙️</span> Gestión ISO 27001
-                <span class="arrow" id="menu-arrow">▼</span>
-            </button>
-            
-            <div class="dropdown-container" id="dropdown-items">
-                <button id="tab-auditor" class="tab-btn" onclick="showTab('auditor')">
-                    <span class="icon">🔍</span> Auditoría
+        <nav class="sidebar-nav">
+            <button class="tab-btn" onclick="showTab('home')">🏠 Inicio</button>
+        
+            <div class="sidebar-menu">
+                <button class="dropdown-btn" onclick="toggleMenu()">
+                    <span>📋 Controles ISO</span>
+                    <span class="arrow" id="menu-arrow">▼</span>
                 </button>
-                <button id="tab-capacitador" class="tab-btn" onclick="showTab('capacitador')">
-                    <span class="icon">📚</span> Capacitación
-                </button>
-                <button id="tab-implementador" class="tab-btn" onclick="showTab('implementacion')">
-                    <span class="icon">🛠️</span> Implementación
-                </button>
+                <div class="dropdown-container" id="dropdown-items">
+                    <button id="tab-auditor" class="tab-btn" onclick="showTab('auditor')">🔍 Auditoría</button>
+                    <button id="tab-capacitador" class="tab-btn" onclick="showTab('capacitador')">📚 Capacitación</button>
+                    <button id="tab-implementador" class="tab-btn" onclick="showTab('implementador')">🛠️ Implementación</button>
+                </div>
             </div>
-        </div>
+        </nav>
+        
         <main class="dashboard-content">
             
             <section id="auditor" class="role-section active">
