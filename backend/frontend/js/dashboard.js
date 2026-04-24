@@ -120,48 +120,51 @@ function renderizarTabla(modo) {
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const filas = document.querySelectorAll('#controlesBody tr');
-    const token = localStorage.getItem('token');
+    
+    // Mostramos en consola para saber que el botón SÍ funciona
+    console.log("Intentando guardar...");
 
-    const controles = Array.from(filas).map(f => ({
-        control_id: parseInt(f.dataset.id),
-        estado: f.querySelector('.status-select')?.value || 'No Iniciado',
-        observaciones: f.querySelector('.input-observacion')?.value || null,
-        responsable: f.querySelector('.input-responsable')?.value || null,
-        fecha_limite: (fechaVal && fechaVal.trim() !== "") ? fechaVal : null,
-        link_evidencia: f.querySelector('.input-evidencia')?.value || null
-    }));
+    const controles = Array.from(filas).map(f => {
+        const fechaInput = f.querySelector('.input-fecha');
+        return {
+            control_id: parseInt(f.dataset.id),
+            estado: f.querySelector('.status-select')?.value || 'No Iniciado',
+            observaciones: f.querySelector('.input-observacion')?.value || null,
+            responsable: f.querySelector('.input-responsable')?.value || null,
+            // Si la fecha está vacía, enviamos null
+            fecha_limite: (fechaInput && fechaInput.value !== "") ? fechaInput.value : null,
+            link_evidencia: f.querySelector('.input-evidencia')?.value || null
+        };
+    });
 
     try {
         btn.disabled = true;
-        btn.textContent = "Conectando...";
+        btn.textContent = "⏳ Guardando...";
 
-        // USA LA RUTA RELATIVA SI ESTÁN EN EL MISMO DOMINIO
         const res = await fetch('/api/controles/guardar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ controles })
+            body: JSON.stringify({ controles }) // El nombre 'controles' debe coincidir con el backend
         });
 
         const data = await res.json();
 
         if (res.ok) {
-            alert("✅ Guardado: " + data.mensaje);
+            alert("✅ " + data.mensaje);
         } else {
-            alert("⚠️ Servidor dice: " + data.mensaje);
+            alert("⚠️ Error: " + data.mensaje);
         }
     } catch (error) {
-        console.error("Error de Fetch:", error);
-        // SI SALE ESTE ALERT, ES QUE EL SERVIDOR NO RESPONDIÓ (ESTÁ CAÍDO O BLOQUEADO)
-        alert("🚫 No hay conexión con el servidor. Revisa la consola (F12).");
+        console.error("Error en la petición:", error);
+        alert("🚫 No se pudo conectar con el servidor");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar progreso";
+        btn.textContent = "💾 Guardar Progreso Actual";
     }
 }
-
 // 6. GENERAR REPORTE (Limpio, sin símbolos raros)
 function generarReporte() {
     const { jsPDF } = window.jspdf;
