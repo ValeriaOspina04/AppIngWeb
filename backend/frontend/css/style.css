@@ -328,50 +328,43 @@ h2 {
     margin-top: 10px;
 }
 
+/* Estilo para el botón del desplegable */
 .dropdown-btn {
     width: 100%;
-    padding: 12px 15px;
-    background: transparent; /* Se adapta al fondo de tu sidebar */
-    color: white;
+    padding: 15px;
+    background: transparent;
+    color: #444; /* Un gris oscuro para que resalte */
     border: none;
-    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre icono y texto */
     cursor: pointer;
     font-size: 15px;
-    font-weight: 500;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background 0.3s;
+    font-weight: 600;
+    transition: 0.3s;
 }
 
 .dropdown-btn:hover {
-    background: rgba(255, 255, 255, 0.1); /* Un brillo sutil al pasar el mouse */
+    background-color: #f0f0f0;
 }
 
-/* Contenedor de botones internos */
+/* Contenedor de los botones internos */
 .dropdown-container {
-    display: none; /* Se activa con el JS */
+    display: none;
     flex-direction: column;
-    background: rgba(0, 0, 0, 0.1); /* Un fondo un poco más oscuro para diferenciar */
-    padding-left: 10px; /* Sangría para los hijos */
+    padding-left: 20px; /* Indentación para que se note que son sub-elementos */
+    background-color: #fafafa;
 }
 
-/* Ajuste para los botones que ya tenías (.tab-btn) */
-.dropdown-container .tab-btn {
-    width: 100%;
-    padding: 10px 15px;
-    margin: 2px 0;
-    font-size: 14px;
-    background: transparent;
-    border-radius: 0; /* Quitamos bordes redondeados para que se vea como lista */
+/* Ajuste de iconos dentro de los botones */
+.icon {
+    font-size: 18px;
+    min-width: 25px;
 }
 
-/* Icono de flecha */
+/* La flecha al final */
 .arrow {
-    font-size: 12px;
-    transition: transform 0.3s;
-}
-
-.arrow.rotate {
-    transform: rotate(180deg);
+    margin-left: auto; /* La empuja hacia la derecha */
+    font-size: 10px;
+    color: #888;
 }
