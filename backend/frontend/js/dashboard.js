@@ -125,44 +125,25 @@ function renderizarTabla(modo) {
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', control.control_id || control.id);
 
-        let celda4 = ''; // Esta será la columna de "Estado / Material / Responsable"
-        let celda5 = ''; // Esta será la columna de "Observaciones / Acción / Fecha"
-
-        if (modo === 'capacitador') {
-            // --- VISTA CAPACITADOR: Recuperamos los archivos ---
-            if(thEstado) thEstado.textContent = 'Material';
-            if(thAccion) thAccion.textContent = 'Acción';
-
-            celda4 = `<td>${control.archivo_url ? '✅ Cargado' : '❌ Pendiente'}</td>`;
-            celda5 = `
+        let celdasExtra = '';
+        
+        if (modo === 'implementador') {
+            celdasExtra = `
+                <td><input type="text" class="input-responsable" value="${control.responsable || ''}"></td>
+                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
+        } else if (modo === 'capacitador') {
+            celdasExtra = `
+                <td colspan="2"><input type="url" class="input-evidencia" placeholder="http://..." value="${control.link_evidencia || ''}"></td>`;
+        } else { // Auditor
+            celdasExtra = `
                 <td>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="file" id="file-${control.control_id}" style="width: 120px; font-size: 10px;">
-                        <button onclick="subirEvidencia(${control.control_id})" style="cursor:pointer">📤</button>
-                    </div>
-                </td>`;
-        } 
-        else if (modo === 'implementador') {
-            // --- VISTA IMPLEMENTADOR: Responsables ---
-            if(thEstado) thEstado.textContent = 'Responsable';
-            if(thAccion) thAccion.textContent = 'Fecha Límite';
-
-            celda4 = `<td><input type="text" class="resp-input" placeholder="Nombre..." value="${control.responsable || ''}" style="width: 100%;"></td>`;
-            celda5 = `<td><input type="date" class="date-input" value="${control.fecha_limite || ''}"></td>`;
-        } 
-        else {
-            // --- VISTA AUDITOR: Cumplimiento (Por defecto) ---
-            if(thEstado) thEstado.textContent = 'Estado';
-            if(thAccion) thAccion.textContent = 'Observaciones';
-
-            celda4 = `<td>
-                <select class="status-select">
-                    <option value="en proceso" ${control.estado === 'en proceso' ? 'selected' : ''}>En proceso</option>
-                    <option value="cumple" ${control.estado === 'cumple' ? 'selected' : ''}>Cumple</option>
-                    <option value="no cumple" ${control.estado === 'no cumple' ? 'selected' : ''}>No cumple</option>
-                </select>
-            </td>`;
-            celda5 = `<td><input type="text" class="obs-input" value="${control.observaciones || ''}" style="width: 100%;"></td>`;
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
         }
 
         tr.innerHTML = `
