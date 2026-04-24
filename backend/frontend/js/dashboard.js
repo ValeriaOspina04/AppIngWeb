@@ -1,3 +1,4 @@
+// Variable global para almacenar los datos
 window.datosControlesGlobal = [];
 
 // 1. CARGA INICIAL
@@ -8,38 +9,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Restaurar textos del header
+    // Mostrar datos en el header
     const nameDisp = document.getElementById('userNameDisplay');
     const roleDisp = document.getElementById('userRoleDisplay');
     if (nameDisp) nameDisp.textContent = localStorage.getItem('userName') || 'Usuario';
     if (roleDisp) roleDisp.textContent = localStorage.getItem('userRole') || 'Rol';
 
     cargarControles();
-    restringirAccesosPorRol(); // <-- AQUÍ ESTÁ LO QUE HACÍA QUE NO SE VIERAN LOS BOTONES
+    restringirAccesosPorRol();
 });
 
-// 2. LÓGICA DE BOTONES Y SEGURIDAD (RESTAURADA)
+// 2. CONTROL DE ACCESOS (Maneja la barra lateral)
 function restringirAccesosPorRol() {
     const rol = (localStorage.getItem('userRole') || '').toLowerCase().trim();
     
     const btnAuditor = document.getElementById('tab-auditor');
     const btnCapacitador = document.getElementById('tab-capacitador');
     const btnImplementador = document.getElementById('tab-implementador');
-    const dropdown = document.getElementById('dropdown-items');
-    const arrow = document.getElementById('menu-arrow');
 
-    // Ocultar botones por defecto
+    // Ocultar botones de navegación por defecto
     if (btnAuditor) btnAuditor.style.display = 'none';
     if (btnCapacitador) btnCapacitador.style.display = 'none';
     if (btnImplementador) btnImplementador.style.display = 'none';
 
-    // Abrir menú lateral si tiene rol permitido
-    if (['implementador', 'auditor', 'capacitador', 'admin'].includes(rol)) {
-        if (dropdown) dropdown.style.display = "flex";
-        if (arrow) arrow.classList.add('rotate');
-    }
-
-    // Mostrar solo su botón correspondiente
+    // Mostrar según rol
     if (rol === 'implementador') {
         if (btnImplementador) btnImplementador.style.display = 'block';
         showTab('implementador');
@@ -57,25 +50,21 @@ function restringirAccesosPorRol() {
     }
 }
 
-// 3. CAMBIAR DE PESTAÑA
+// 3. CAMBIO DE PESTAÑA
 function showTab(roleId) {
     const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
-    
-    // Seguridad: Si no es admin y trata de entrar a otro rol, no dejarlo
     if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
 
-    // 1. Ocultar todos los textos superiores
+    // Ocultar textos de bienvenida/instrucciones
     document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
-    
-    // 2. Mostrar solo el texto del rol actual
     const seccionActiva = document.getElementById(roleId);
     if (seccionActiva) seccionActiva.style.display = 'block';
 
-    // 3. Actualizar la clase 'active' en los botones de la sidebar
+    // Clase activa en botones sidebar
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${roleId}`)?.classList.add('active');
 
-    // 4. Cambiar los nombres de las columnas según el enfoque
+    // Actualizar encabezados de la tabla
     const thEstado = document.getElementById('th-estado');
     const thAccion = document.getElementById('th-accion');
 
@@ -90,11 +79,10 @@ function showTab(roleId) {
         thAccion.textContent = 'Observaciones';
     }
 
-    // 5. Dibujar la tabla con los inputs correspondientes
     renderizarTabla(roleId);
 }
 
-// 4. RENDERIZAR TABLA
+// 4. DIBUJAR TABLA
 function renderizarTabla(modo) {
     const tbody = document.getElementById('controlesBody');
     if (!tbody) return;
@@ -106,17 +94,22 @@ function renderizarTabla(modo) {
 
         let celdasExtra = '';
         if (modo === 'implementador') {
-            celdasExtra = `<td><input type="text" class="input-responsable" value="${control.responsable || ''}"></td>
-                           <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
+            celdasExtra = `
+                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Responsable técnico"></td>
+                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
         } else if (modo === 'capacitador') {
-            celdasExtra = `<td colspan="2"><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}"></td>`;
+            celdasExtra = `
+                <td colspan="2"><input type="url" class="input-evidencia" placeholder="URL del material" value="${control.link_evidencia || ''}"></td>`;
         } else {
-            celdasExtra = `<td><select class="status-select">
-                                <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                                <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                                <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
-                            </select></td>
-                           <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
+            celdasExtra = `
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
         }
 
         tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
@@ -124,10 +117,11 @@ function renderizarTabla(modo) {
     });
 }
 
-// 5. GUARDAR Y PDF
+// 5. ACCIÓN: GUARDAR
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const filas = document.querySelectorAll('#controlesBody tr');
+    
     const avances = Array.from(filas).map(f => ({
         control_id: f.dataset.id,
         estado: f.querySelector('.status-select')?.value || null,
@@ -139,36 +133,66 @@ async function guardarProgreso() {
 
     try {
         btn.disabled = true;
+        btn.textContent = "Cargando...";
         const res = await fetch('/api/controles/guardar', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({ avances })
         });
-        if (res.ok) alert("✅ Guardado con éxito");
-    } catch (e) { alert("🚫 Error al conectar"); } 
-    finally { btn.disabled = false; }
+        if (res.ok) alert("✅ Guardado correctamente.");
+        else alert("❌ Error al guardar.");
+    } catch (e) {
+        alert("🚫 Error de conexión.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "💾 Guardar Progreso Actual";
+    }
 }
 
-function generarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l', 'mm', 'a4'); 
-    doc.text("Reporte ISO 27001", 14, 15);
-    doc.autoTable({
-        html: 'table', startY: 25, theme: 'grid',
-        didParseCell: (data) => {
-            const input = data.cell.raw.querySelector?.('input, select');
-            if (input) data.cell.text = [input.value];
-        }
-    });
-    doc.save("Reporte.pdf");
+// 6. ACCIÓN: REPORTES
+function generarReporte() {
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        doc.setFontSize(16);
+        doc.text("Reporte ISO 27001", 14, 15);
+        
+        doc.autoTable({
+            html: '#tablaIso',
+            startY: 25,
+            didParseCell: (data) => {
+                const input = data.cell.raw.querySelector?.('input, select');
+                if (input) data.cell.text = [input.value];
+            }
+        });
+        doc.save("Reporte_ISO27001.pdf");
+    } catch (error) {
+        alert("Error al generar PDF. Revisa la consola.");
+        console.error(error);
+    }
 }
 
+// 7. FUNCIONES AUXILIARES
 async function cargarControles() {
     try {
-        const res = await fetch('/api/controles', { headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`} });
+        const res = await fetch('/api/controles', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
         window.datosControlesGlobal = await res.json();
-        renderizarTabla((localStorage.getItem('userRole') || 'auditor').toLowerCase());
-    } catch (e) { console.error(e); }
+        const rol = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
+        showTab(rol);
+    } catch (e) { console.error("Error al cargar datos:", e); }
 }
 
-function logout() { localStorage.clear(); window.location.href = '/'; }
+function toggleMenu() {
+    const items = document.getElementById('dropdown-items');
+    if (items) items.style.display = (items.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/';
+}
