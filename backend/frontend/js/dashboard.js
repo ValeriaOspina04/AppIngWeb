@@ -93,14 +93,37 @@ function renderizarTabla(modo) {
         tr.setAttribute('data-id', control.control_id || control.id);
 
         let celdasExtra = '';
+        
         if (modo === 'implementador') {
+            // Aquí usamos tu campo 'responsable' de la base de datos
             celdasExtra = `
-                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Responsable técnico"></td>
-                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
-        } else if (modo === 'capacitador') {
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>🛠️ Pendiente</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>⚙️ Implementando</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>✅ Terminado</option>
+                    </select>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="¿Quién lo hace? (Ej: Luisa)">
+                        <input type="date" class="input-fecha" value="${control.fecha_limite || ''}">
+                    </div>
+                </td>`;
+        } 
+        else if (modo === 'capacitador') {
             celdasExtra = `
-                <td colspan="2"><input type="url" class="input-evidencia" placeholder="URL del material" value="${control.link_evidencia || ''}"></td>`;
-        } else {
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>📅 Por Enseñar</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>📖 En Curso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>🎓 Capacitado</option>
+                    </select>
+                </td>
+                <td><input type="url" class="input-evidencia" placeholder="Link del material..." value="${control.link_evidencia || ''}"></td>`;
+        } 
+        else {
+            // Auditor
             celdasExtra = `
                 <td>
                     <select class="status-select">
@@ -109,14 +132,18 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
                     </select>
                 </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Notas del auditor..."></td>`;
         }
 
-        tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
+        tr.innerHTML = `
+            <td>${control.codigo}</td>
+            <td>${control.nombre_control}</td>
+            <td>${control.categoria || 'Gral'}</td>
+            ${celdasExtra} 
+        `;
         tbody.appendChild(tr);
     });
 }
-
 // 5. ACCIÓN: GUARDAR
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
