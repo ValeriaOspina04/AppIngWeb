@@ -1,4 +1,7 @@
 const db = require('../config/db');
+const jwt = require('jsonwebtoken');
+
+function obtenerUsuario(req) { ... }
 
 exports.obtenerControles = async (req, res) => {
     try {
