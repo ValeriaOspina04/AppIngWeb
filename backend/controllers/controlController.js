@@ -14,13 +14,16 @@ exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
         // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
-        const empresa_id = (req.user && req.user.empresa_id) ? req.user.empresa_id : 1; 
+        const [empresaRows] = await db.query(
+            'SELECT id FROM empresas WHERE nombre = ?', 
+            [nombre_empresa]
+        ); 
 
-        console.log("Guardando para empresa:", empresa_id);
-
-        if (!controles || !Array.isArray(controles)) {
-            return res.status(400).json({ mensaje: "No hay datos para guardar" });
+        if (empresaRows.length === 0) {
+            return res.status(404).json({ mensaje: "La empresa especificada no existe." });
         }
+
+        const empresa_id = empresaRows[0].id;
 
         const sql = `
             INSERT INTO progreso_checklist 
