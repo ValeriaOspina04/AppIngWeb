@@ -12,9 +12,11 @@ exports.obtenerControles = async (req, res) => {
 
 exports.guardarProgreso = async (req, res) => {
     try {
+        console.log(req.session);
         const { controles } = req.body;
-        // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
-       // 1. Buscamos el id_empresa usando el nombre
+        if (!req.session.user) {
+            return res.status(401).json({ mensaje: "No autenticado" });
+        }
         const id_empresa = req.session.user.id_empresa;
 
         if (empresa.length === 0) {
