@@ -1,7 +1,17 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
 
-function obtenerUsuario(req) { ... }
+function obtenerUsuario(req) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return null;
+
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET;
+    } catch (err) {
+        return null;
+    }
+}
 
 exports.obtenerControles = async (req, res) => {
     try {
