@@ -9,14 +9,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Servir archivos estáticos (CSS, JS, Imágenes)
-// Salimos de 'backend' con '..' para encontrar 'frontend'
+// Esta es la clave: 
+// '__dirname' es la carpeta 'backend'. 
+// '..' sale de 'backend' para encontrar 'frontend'.
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
-// 2. Rutas para las páginas HTML
+// Rutas de navegación
 app.get('/', (req, res) => {
-    // IMPORTANTE: Asegúrate de que la carpeta se llame 'frontend' (minúscula) 
-    // y 'pages' (minúscula). Linux distingue entre Mayúsculas y Minúsculas.
     res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'login.html'));
 });
 
@@ -28,11 +27,10 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'pages', 'dashboard.html'));
 });
 
-// 3. Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/controles', controlRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor en puerto ${PORT}`);
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
