@@ -47,4 +47,4 @@ exports.guardarProgreso = async (req, res) => {
         console.error(`Error en control ${ctrl.control_id}:`, dbErr.message);
         // Seguimos con el siguiente para que no muera todo el proceso
     }
-}
+};
