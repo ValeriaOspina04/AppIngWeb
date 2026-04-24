@@ -120,9 +120,10 @@ function renderizarTabla(modo) {
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
     const filas = document.querySelectorAll('#controlesBody tr');
-    
-    const avances = Array.from(filas).map(f => ({
-        control_id: f.dataset.id,
+    const token = localStorage.getItem('token');
+
+    const controles = Array.from(filas).map(f => ({
+        control_id: parseInt(f.dataset.id),
         estado: f.querySelector('.status-select')?.value || 'No Iniciado',
         observaciones: f.querySelector('.input-observacion')?.value || null,
         responsable: f.querySelector('.input-responsable')?.value || null,
@@ -132,28 +133,32 @@ async function guardarProgreso() {
 
     try {
         btn.disabled = true;
-        btn.textContent = "Guardando...";
+        btn.textContent = "Conectando...";
 
+        // USA LA RUTA RELATIVA SI ESTÁN EN EL MISMO DOMINIO
         const res = await fetch('/api/controles/guardar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ controles })
         });
 
+        const data = await res.json();
+
         if (res.ok) {
-            alert("✅ Guardado con éxito");
+            alert("✅ Guardado: " + data.mensaje);
         } else {
-            const err = await res.json();
-            alert("❌ Error: " + (err.mensaje || "Datos inválidos"));
+            alert("⚠️ Servidor dice: " + data.mensaje);
         }
-    } catch (e) {
-        alert("🚫 Error de conexión");
+    } catch (error) {
+        console.error("Error de Fetch:", error);
+        // SI SALE ESTE ALERT, ES QUE EL SERVIDOR NO RESPONDIÓ (ESTÁ CAÍDO O BLOQUEADO)
+        alert("🚫 No hay conexión con el servidor. Revisa la consola (F12).");
     } finally {
         btn.disabled = false;
-        btn.textContent = "💾 Guardar Progreso Actual";
+        btn.textContent = "💾 Guardar progreso";
     }
 }
 
