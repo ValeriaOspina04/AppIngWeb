@@ -113,10 +113,6 @@ function renderizarTabla(modo) {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    if (!window.datosControlesGlobal || window.datosControlesGlobal.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">No hay datos disponibles</td></tr>';
-        return;
-    }
 
     window.datosControlesGlobal.forEach(control => {
         const tr = document.createElement('tr');
@@ -129,8 +125,8 @@ function renderizarTabla(modo) {
                 <td>
                     <select class="status-select">
                         <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumplido</option>
+                        <option value="En Proceso" ${control.estado === 'Implementando' ? 'selected' : ''}>Implementando</option>
+                        <option value="Cumple" ${control.estado === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
                     </select>
                 </td>
                 <td>
@@ -143,7 +139,7 @@ function renderizarTabla(modo) {
                     <select class="status-select">
                         <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>Pendiente</option>
                         <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Curso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Finalizado</option>
+                        <option value="Cumple" ${control.estado === 'Realizado' ? 'selected' : ''}>Realizado</option>
                     </select>
                 </td>
                 <td><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link material" style="width: 100%;"></td>`;
@@ -152,8 +148,7 @@ function renderizarTabla(modo) {
             celdasExtra = `
                 <td>
                     <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                        <option value="No Iniciado" ${control.estado === 'No cumple' ? 'selected' : ''}>No cumple</option>
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
                     </select>
                 </td>
