@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     cargarControles();
+    restringirAccesosPorRol();
 });
 
 // 2. OBTENER DATOS DEL SERVIDOR
@@ -34,6 +35,36 @@ async function cargarControles() {
         showTab(rol);
     } catch (e) {
         console.error("Error al cargar controles:", e);
+    }
+}
+
+function restringirAccesosPorRol() {
+    const rol = (localStorage.getItem('userRole') || '').toLowerCase().trim();
+    
+    const btnAuditor = document.getElementById('tab-auditor');
+    const btnCapacitador = document.getElementById('tab-capacitador');
+    const btnImplementador = document.getElementById('tab-implementador');
+
+    // Ocultar botones de navegación por defecto
+    if (btnAuditor) btnAuditor.style.display = 'none';
+    if (btnCapacitador) btnCapacitador.style.display = 'none';
+    if (btnImplementador) btnImplementador.style.display = 'none';
+
+    // Mostrar según rol
+    if (rol === 'implementador') {
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('implementador');
+    } else if (rol === 'capacitador') {
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
+        showTab('capacitador');
+    } else if (rol === 'auditor') {
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        showTab('auditor');
+    } else if (rol === 'admin') {
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('auditor');
     }
 }
 
