@@ -12,7 +12,7 @@ exports.obtenerControles = async (req, res) => {
 
 exports.guardarProgreso = async (req, res) => {
     try {
-        const { controles } = req.body;
+        const { controles, nombre_empresa } = req.body;
         // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
        // 1. Buscamos el id_empresa usando el nombre
         const [empresa] = await db.query(
@@ -24,7 +24,7 @@ exports.guardarProgreso = async (req, res) => {
             return res.status(404).json({ mensaje: "Empresa no encontrada: " + nombre_empresa });
         }
 
-        const id_actual = empresa[0].id_empresa;
+       const id_empresa = empresa[0].id_empresa;
 
         const sql = `
             INSERT INTO progreso_checklist 
