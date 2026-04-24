@@ -7,6 +7,6 @@ const authMiddleware = require('../middleware/auth'); // El que definimos antes
 router.get('/', authMiddleware, controlController.obtenerControles);
 
 // POST para guardar los avances
-router.post('/guardar', authMiddleware, controlController.guardarAvances);
+router.post('/guardar', authMiddleware, controlController.guardarProgreso);
 
 module.exports = router;
