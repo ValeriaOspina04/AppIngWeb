@@ -1,37 +1,95 @@
 window.datosControlesGlobal = [];
 
-// 1. GENERAR REPORTE PDF
-async function generarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l', 'mm', 'a4'); 
+// 1. CARGA INICIAL
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
 
-    doc.setFontSize(16);
-    doc.setTextColor(19, 190, 216);
-    doc.text("Reporte ISO 27001 - Gestión de Controles", 14, 15);
+    // Restaurar textos del header
+    const nameDisp = document.getElementById('userNameDisplay');
+    const roleDisp = document.getElementById('userRoleDisplay');
+    if (nameDisp) nameDisp.textContent = localStorage.getItem('userName') || 'Usuario';
+    if (roleDisp) roleDisp.textContent = localStorage.getItem('userRole') || 'Rol';
+
+    cargarControles();
+    restringirAccesosPorRol(); // <-- AQUÍ ESTÁ LO QUE HACÍA QUE NO SE VIERAN LOS BOTONES
+});
+
+// 2. LÓGICA DE BOTONES Y SEGURIDAD (RESTAURADA)
+function restringirAccesosPorRol() {
+    const rol = (localStorage.getItem('userRole') || '').toLowerCase().trim();
     
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado por: ${localStorage.getItem('userName') || 'Usuario'}`, 14, 22);
+    const btnAuditor = document.getElementById('tab-auditor');
+    const btnCapacitador = document.getElementById('tab-capacitador');
+    const btnImplementador = document.getElementById('tab-implementador');
+    const dropdown = document.getElementById('dropdown-items');
+    const arrow = document.getElementById('menu-arrow');
 
-    doc.autoTable({
-        html: 'table',
-        startY: 30,
-        theme: 'grid',
-        headStyles: { fillColor: [19, 190, 216] },
-        styles: { fontSize: 7 },
-        didParseCell: function(data) {
-            const el = data.cell.raw;
-            if (el && el.querySelector) {
-                const val = el.querySelector('input')?.value || el.querySelector('select')?.value;
-                if (val !== undefined) data.cell.text = [val];
-            }
-        }
-    });
+    // Ocultar botones por defecto
+    if (btnAuditor) btnAuditor.style.display = 'none';
+    if (btnCapacitador) btnCapacitador.style.display = 'none';
+    if (btnImplementador) btnImplementador.style.display = 'none';
 
-    doc.save("Reporte_ISO27001.pdf");
+    // Abrir menú lateral si tiene rol permitido
+    if (['implementador', 'auditor', 'capacitador', 'admin'].includes(rol)) {
+        if (dropdown) dropdown.style.display = "flex";
+        if (arrow) arrow.classList.add('rotate');
+    }
+
+    // Mostrar solo su botón correspondiente
+    if (rol === 'implementador') {
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('implementador');
+    } else if (rol === 'capacitador') {
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
+        showTab('capacitador');
+    } else if (rol === 'auditor') {
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        showTab('auditor');
+    } else if (rol === 'admin') {
+        if (btnAuditor) btnAuditor.style.display = 'block';
+        if (btnCapacitador) btnCapacitador.style.display = 'block';
+        if (btnImplementador) btnImplementador.style.display = 'block';
+        showTab('auditor');
+    }
 }
 
-// 2. RENDERIZAR TABLA (Implementador = Hacer)
+// 3. CAMBIAR DE PESTAÑA
+function showTab(roleId) {
+    const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
+    if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
+
+    document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const seccion = document.getElementById(roleId);
+    if (seccion) seccion.style.display = 'block';
+    
+    const btnTab = document.getElementById(`tab-${roleId}`);
+    if (btnTab) btnTab.classList.add('active');
+
+    // Actualizar encabezados de la tabla
+    const thEstado = document.getElementById('th-estado');
+    const thAccion = document.getElementById('th-accion');
+
+    if (roleId === 'capacitador') {
+        if(thEstado) thEstado.textContent = 'Enfoque: Enseñar'; 
+        if(thAccion) thAccion.textContent = 'Evidencia de Capacitación';
+    } else if (roleId === 'implementador') {
+        if(thEstado) thEstado.textContent = 'Enfoque: Hacer'; 
+        if(thAccion) thAccion.textContent = 'Fecha Límite';
+    } else {
+        if(thEstado) thEstado.textContent = 'Estado Auditoría'; 
+        if(thAccion) thAccion.textContent = 'Observaciones';
+    }
+
+    renderizarTabla(roleId);
+}
+
+// 4. RENDERIZAR TABLA
 function renderizarTabla(modo) {
     const tbody = document.getElementById('controlesBody');
     if (!tbody) return;
@@ -42,131 +100,70 @@ function renderizarTabla(modo) {
         tr.setAttribute('data-id', control.control_id || control.id);
 
         let celdasExtra = '';
-        
         if (modo === 'implementador') {
-            // El implementador pone quién LO HACE y CUÁNDO
-            celdasExtra = `
-                <td><input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Quién lo configura..."></td>
-                <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
+            celdasExtra = `<td><input type="text" class="input-responsable" value="${control.responsable || ''}"></td>
+                           <td><input type="date" class="input-fecha" value="${control.fecha_limite || ''}"></td>`;
         } else if (modo === 'capacitador') {
-            // El capacitador pone el LINK de lo que ENSEÑÓ
-            celdasExtra = `
-                <td colspan="2"><input type="url" class="input-evidencia" placeholder="Link de capacitación..." value="${control.link_evidencia || ''}"></td>`;
+            celdasExtra = `<td colspan="2"><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}"></td>`;
         } else {
-            // El auditor ve el ESTADO legal
-            celdasExtra = `
-                <td>
-                    <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
-                    </select>
-                </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Nota de auditoría"></td>`;
+            celdasExtra = `<td><select class="status-select">
+                                <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
+                                <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                                <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
+                            </select></td>
+                           <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
         }
 
-        tr.innerHTML = `
-            <td>${control.codigo}</td>
-            <td>${control.nombre_control}</td>
-            <td>${control.categoria || 'General'}</td>
-            ${celdasExtra} 
-        `;
+        tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
         tbody.appendChild(tr);
     });
 }
 
-// 3. GUARDAR PROGRESO
+// 5. GUARDAR Y PDF
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
-    const tbody = document.getElementById('controlesBody');
-    const filas = tbody.querySelectorAll('tr');
-
-    const avances = Array.from(filas).map(fila => ({
-        control_id: fila.dataset.id, 
-        estado: fila.querySelector('.status-select')?.value || null,
-        observaciones: fila.querySelector('.input-observacion')?.value || null,
-        responsable: fila.querySelector('.input-responsable')?.value || null,
-        fecha_limite: fila.querySelector('.input-fecha')?.value || null,
-        link_evidencia: fila.querySelector('.input-evidencia')?.value || null
+    const filas = document.querySelectorAll('#controlesBody tr');
+    const avances = Array.from(filas).map(f => ({
+        control_id: f.dataset.id,
+        estado: f.querySelector('.status-select')?.value || null,
+        observaciones: f.querySelector('.input-observacion')?.value || null,
+        responsable: f.querySelector('.input-responsable')?.value || null,
+        fecha_limite: f.querySelector('.input-fecha')?.value || null,
+        link_evidencia: f.querySelector('.input-evidencia')?.value || null
     }));
 
     try {
         btn.disabled = true;
-        const response = await fetch('/api/controles/guardar', {
+        const res = await fetch('/api/controles/guardar', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
+            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}`},
             body: JSON.stringify({ avances })
         });
+        if (res.ok) alert("✅ Guardado con éxito");
+    } catch (e) { alert("🚫 Error al conectar"); } 
+    finally { btn.disabled = false; }
+}
 
-        if (response.ok) {
-            alert("✅ Guardado correctamente");
-        } else {
-            const err = await response.json();
-            alert("❌ Error: " + err.mensaje);
+function generarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'mm', 'a4'); 
+    doc.text("Reporte ISO 27001", 14, 15);
+    doc.autoTable({
+        html: 'table', startY: 25, theme: 'grid',
+        didParseCell: (data) => {
+            const input = data.cell.raw.querySelector?.('input, select');
+            if (input) data.cell.text = [input.value];
         }
-    } catch (e) {
-        alert("🚫 Error de conexión");
-    } finally {
-        btn.disabled = false;
-    }
+    });
+    doc.save("Reporte.pdf");
 }
-
-// 4. CAMBIO DE ROL
-function showTab(roleId) {
-    const rolActual = (localStorage.getItem('userRole') || '').toLowerCase();
-    if (rolActual !== 'admin' && rolActual !== roleId) return;
-
-    document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    const seccion = document.getElementById(roleId);
-    if (seccion) seccion.style.display = 'block';
-    
-    document.getElementById(`tab-${roleId}`)?.classList.add('active');
-
-    const thEstado = document.getElementById('th-estado');
-    const thAccion = document.getElementById('th-accion');
-
-    if (roleId === 'capacitador') {
-        thEstado.textContent = 'Enfoque: Enseñar'; 
-        thAccion.textContent = 'Material / Evidencia';
-    } else if (roleId === 'implementador') {
-        thEstado.textContent = 'Enfoque: Hacer'; 
-        thAccion.textContent = 'Fecha Límite';
-    } else {
-        thEstado.textContent = 'Estado'; 
-        thAccion.textContent = 'Observaciones';
-    }
-
-    renderizarTabla(roleId);
-}
-
-// 5. INICIO AL CARGAR
-document.addEventListener('DOMContentLoaded', () => {
-    const userName = localStorage.getItem('userName');
-    const userRole = localStorage.getItem('userRole');
-
-    if (document.getElementById('userNameDisplay')) 
-        document.getElementById('userNameDisplay').textContent = userName || 'Usuario';
-    
-    if (document.getElementById('userRoleDisplay')) 
-        document.getElementById('userRoleDisplay').textContent = userRole || 'Rol';
-
-    cargarControles();
-});
 
 async function cargarControles() {
     try {
-        const res = await fetch('/api/controles', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        const res = await fetch('/api/controles', { headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`} });
         window.datosControlesGlobal = await res.json();
-        const rol = (localStorage.getItem('userRole') || 'auditor').toLowerCase();
-        showTab(rol);
-    } catch (e) {
-        console.error("Error:", e);
-    }
+        renderizarTabla((localStorage.getItem('userRole') || 'auditor').toLowerCase());
+    } catch (e) { console.error(e); }
 }
+
+function logout() { localStorage.clear(); window.location.href = '/'; }
