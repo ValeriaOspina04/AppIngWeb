@@ -55,12 +55,15 @@ exports.login = async (req, res) => {
 
         // 3. Generar el Token JWT
         // Usamos un valor por defecto por si falta la variable en Render
-        const secret = process.env.JWT_SECRET || 'clave_secreta_temporal';
+        const secret = process.env.JWT_SECRET;
 
         const token = jwt.sign(
-            { id: user.id, rol: user.rol }, 
-            secret, 
-            { expiresIn: '8h' }
+            { 
+                id: usuario.id, 
+                empresa_id: usuario.empresa_id // <--- ¡ESTO ES VITAL!
+            }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '24h' }
         );
 
         // 4. Responder con los datos necesarios para el frontend
