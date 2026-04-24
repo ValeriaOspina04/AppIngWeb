@@ -60,32 +60,37 @@ function restringirAccesosPorRol() {
 // 3. CAMBIAR DE PESTAÑA
 function showTab(roleId) {
     const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
+    
+    // Seguridad: Si no es admin y trata de entrar a otro rol, no dejarlo
     if (rolUsuario !== 'admin' && rolUsuario !== roleId) return;
 
+    // 1. Ocultar todos los textos superiores
     document.querySelectorAll('.role-section').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    const seccion = document.getElementById(roleId);
-    if (seccion) seccion.style.display = 'block';
     
-    const btnTab = document.getElementById(`tab-${roleId}`);
-    if (btnTab) btnTab.classList.add('active');
+    // 2. Mostrar solo el texto del rol actual
+    const seccionActiva = document.getElementById(roleId);
+    if (seccionActiva) seccionActiva.style.display = 'block';
 
-    // Actualizar encabezados de la tabla
+    // 3. Actualizar la clase 'active' en los botones de la sidebar
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${roleId}`)?.classList.add('active');
+
+    // 4. Cambiar los nombres de las columnas según el enfoque
     const thEstado = document.getElementById('th-estado');
     const thAccion = document.getElementById('th-accion');
 
     if (roleId === 'capacitador') {
-        if(thEstado) thEstado.textContent = 'Enfoque: Enseñar'; 
-        if(thAccion) thAccion.textContent = 'Evidencia de Capacitación';
+        thEstado.textContent = 'Enfoque: Enseñar'; 
+        thAccion.textContent = 'Evidencia / Material';
     } else if (roleId === 'implementador') {
-        if(thEstado) thEstado.textContent = 'Enfoque: Hacer'; 
-        if(thAccion) thAccion.textContent = 'Fecha Límite';
+        thEstado.textContent = 'Enfoque: Hacer'; 
+        thAccion.textContent = 'Fecha Límite';
     } else {
-        if(thEstado) thEstado.textContent = 'Estado Auditoría'; 
-        if(thAccion) thAccion.textContent = 'Observaciones';
+        thEstado.textContent = 'Estado Auditoría'; 
+        thAccion.textContent = 'Observaciones';
     }
 
+    // 5. Dibujar la tabla con los inputs correspondientes
     renderizarTabla(roleId);
 }
 
