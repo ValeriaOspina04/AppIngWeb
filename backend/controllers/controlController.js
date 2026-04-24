@@ -13,10 +13,13 @@ exports.obtenerControles = async (req, res) => {
 exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
-        const empresa_id = req.user.empresa_id;
+        // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
+        const empresa_id = (req.user && req.user.empresa_id) ? req.user.empresa_id : 1; 
+
+        console.log("Guardando para empresa:", empresa_id);
 
         if (!controles || !Array.isArray(controles)) {
-            return res.status(400).json({ mensaje: "Datos inválidos" });
+            return res.status(400).json({ mensaje: "No hay datos para guardar" });
         }
 
         const sql = `
@@ -31,9 +34,7 @@ exports.guardarProgreso = async (req, res) => {
             link_evidencia = VALUES(link_evidencia)
         `;
 
-        // Procesamos uno por uno para mayor seguridad en el log
         for (const ctrl of controles) {
-            // Validamos que los campos vacíos sean NULL para que MySQL no proteste
             await db.query(sql, [
                 empresa_id,
                 ctrl.control_id,
@@ -45,9 +46,9 @@ exports.guardarProgreso = async (req, res) => {
             ]);
         }
 
-        res.json({ mensaje: "Progreso actualizado correctamente" });
+        res.json({ mensaje: "¡Progreso guardado con éxito!" });
     } catch (error) {
-        console.error("Error en DB:", error);
-        res.status(500).json({ mensaje: "Error interno del servidor", detalle: error.message });
+        console.error("ERROR DB:", error.message);
+        res.status(500).json({ mensaje: "Error de base de datos", detalle: error.message });
     }
 };
