@@ -165,14 +165,14 @@ function renderizarTabla(modo) {
 
 function logout() {
     localStorage.clear();
-    window.location.href = 'login.html';
+    window.location.href = '/';
 }
 
 // CARGA INICIAL (Cuando abre la página)
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = 'login.html';
+        window.location.href = '/';
         return;
     }
 
