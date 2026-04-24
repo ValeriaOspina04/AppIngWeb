@@ -95,35 +95,29 @@ function renderizarTabla(modo) {
         let celdasExtra = '';
         
         if (modo === 'implementador') {
-            // Aquí usamos tu campo 'responsable' de la base de datos
             celdasExtra = `
                 <td>
                     <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>🛠️ Pendiente</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>⚙️ Implementando</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>✅ Terminado</option>
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>🛠️ Por Implementar</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>⚙️ En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>✅ Cumplido</option>
                     </select>
                 </td>
                 <td>
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="¿Quién lo hace? (Ej: Luisa)">
-                        <input type="date" class="input-fecha" value="${control.fecha_limite || ''}">
-                    </div>
+                    <input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Responsable">
+                    <input type="date" class="input-fecha" value="${control.fecha_limite || ''}" style="margin-top:5px">
                 </td>`;
-        } 
-        else if (modo === 'capacitador') {
+        } else if (modo === 'capacitador') {
             celdasExtra = `
                 <td>
                     <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>📅 Por Enseñar</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>📖 En Curso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>🎓 Capacitado</option>
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>📅 Pendiente</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>📖 Capacitando</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>🎓 Finalizado</option>
                     </select>
                 </td>
-                <td><input type="url" class="input-evidencia" placeholder="Link del material..." value="${control.link_evidencia || ''}"></td>`;
-        } 
-        else {
-            // Auditor
+                <td><input type="url" class="input-evidencia" placeholder="Link evidencia" value="${control.link_evidencia || ''}"></td>`;
+        } else {
             celdasExtra = `
                 <td>
                     <select class="status-select">
@@ -132,18 +126,14 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
                     </select>
                 </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Notas del auditor..."></td>`;
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Observaciones"></td>`;
         }
 
-        tr.innerHTML = `
-            <td>${control.codigo}</td>
-            <td>${control.nombre_control}</td>
-            <td>${control.categoria || 'Gral'}</td>
-            ${celdasExtra} 
-        `;
+        tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
         tbody.appendChild(tr);
     });
 }
+
 // 5. ACCIÓN: GUARDAR
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
@@ -200,25 +190,35 @@ async function guardarProgreso() {
 
 // 6. ACCIÓN: REPORTES
 function generarReporte() {
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-        doc.setFontSize(16);
-        doc.text("Reporte ISO 27001", 14, 15);
-        
-        doc.autoTable({
-            html: '#tablaIso',
-            startY: 25,
-            didParseCell: (data) => {
-                const input = data.cell.raw.querySelector?.('input, select');
-                if (input) data.cell.text = [input.value];
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'mm', 'a4');
+    
+    doc.setFontSize(18);
+    doc.setTextColor(40);
+    doc.text("Reporte de Cumplimiento ISO 27001", 14, 15);
+
+    doc.autoTable({
+        html: '#tablaIso',
+        startY: 25,
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] },
+        didParseCell: (data) => {
+            // Buscamos si hay inputs o selects dentro de la celda
+            const select = data.cell.raw.querySelector?.('select');
+            const inputs = data.cell.raw.querySelectorAll?.('input');
+
+            if (select) {
+                // Toma el texto de la opción seleccionada (ej: "✅ Cumplido")
+                data.cell.text = [select.options[select.selectedIndex].text];
+            } else if (inputs && inputs.length > 0) {
+                // Si hay varios inputs (como Responsable + Fecha), los une con un espacio
+                const valores = Array.from(inputs).map(i => i.value).filter(v => v !== "");
+                data.cell.text = [valores.join(" | ")];
             }
-        });
-        doc.save("Reporte_ISO27001.pdf");
-    } catch (error) {
-        alert("Error al generar PDF. Revisa la consola.");
-        console.error(error);
-    }
+        }
+    });
+    
+    doc.save(`Reporte_ISO27001_${new Date().toLocaleDateString()}.pdf`);
 }
 
 // 7. FUNCIONES AUXILIARES
