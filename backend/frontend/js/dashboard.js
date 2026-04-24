@@ -241,12 +241,20 @@ function restringirAccesosPorRol() {
     const btnAuditor = document.getElementById('tab-auditor');
     const btnCapacitador = document.getElementById('tab-capacitador');
     const btnImplementador = document.getElementById('tab-implementador');
+    const dropdown = document.getElementById('dropdown-items');
+    const arrow = document.getElementById('menu-arrow');
 
     // 3. OCULTAR TODO POR DEFECTO
     if (btnAuditor) btnAuditor.style.display = 'none';
     if (btnCapacitador) btnCapacitador.style.display = 'none';
     if (btnImplementador) btnImplementador.style.display = 'none';
 
+    if (rol === 'implementador' || rol === 'auditor' || rol === 'capacitador') {
+        if (dropdown) {
+            dropdown.style.display = "flex"; // Lo abre automáticamente
+            if (arrow) arrow.classList.add('rotate'); // Gira la flecha
+        }
+    }
     // 4. MOSTRAR SOLO LO PERMITIDO
     if (rol === 'implementador') {
         if (btnImplementador) btnImplementador.style.display = 'block';
