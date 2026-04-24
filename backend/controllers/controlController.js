@@ -14,20 +14,15 @@ exports.guardarProgreso = async (req, res) => {
     try {
         const { controles } = req.body;
         // Si req.user no existe o no tiene empresa_id, usamos 1 como respaldo para pruebas
-        const [empresaRows] = await db.query(
-            'SELECT id FROM empresas WHERE nombre = ?', 
-            [nombre_empresa]
-        ); 
+       const id_empresa = req.user.id_empresa; 
 
-        if (empresaRows.length === 0) {
-            return res.status(404).json({ mensaje: "La empresa especificada no existe." });
+        if (!id_empresa) {
+            return res.status(401).json({ mensaje: "No se encontró ID de empresa en la sesión" });
         }
-
-        const empresa_id = empresaRows[0].id;
 
         const sql = `
             INSERT INTO progreso_checklist 
-            (empresa_id, control_id, estado, observaciones, responsable, fecha_limite, link_evidencia) 
+            (id_empresa, control_id, estado, observaciones, responsable, fecha_limite, link_evidencia) 
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
             estado = VALUES(estado),
@@ -39,7 +34,7 @@ exports.guardarProgreso = async (req, res) => {
 
         for (const ctrl of controles) {
             await db.query(sql, [
-                empresa_id,
+                id_empresa,
                 ctrl.control_id,
                 ctrl.estado || 'No Iniciado',
                 ctrl.observaciones || null,
