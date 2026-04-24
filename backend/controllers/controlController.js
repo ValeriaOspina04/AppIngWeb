@@ -24,28 +24,27 @@ exports.guardarProgreso = async (req, res) => {
             (empresa_id, control_id, estado, observaciones, responsable, fecha_limite, link_evidencia) 
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
-            estado = IFNULL(VALUES(estado), estado),
-            observaciones = IFNULL(VALUES(observaciones), observaciones),
-            responsable = IFNULL(VALUES(responsable), responsable),
-            fecha_limite = IFNULL(VALUES(fecha_limite), fecha_limite),
-            link_evidencia = IFNULL(VALUES(link_evidencia), link_evidencia)
+            estado = VALUES(estado),
+            observaciones = VALUES(observaciones),
+            responsable = VALUES(responsable),
+            fecha_limite = VALUES(fecha_limite),
+            link_evidencia = VALUES(link_evidencia)
         `;
 
-        await Promise.all(controles.map(ctrl => 
-            db.query(sql, [
-                req.user.empresa_id, 
-                ctrl.control_id, 
-                ctrl.estado || 'No Iniciado', 
-                ctrl.observaciones || null, 
-                ctrl.responsable || null, 
-                ctrl.fecha_limite || null, 
-                ctrl.link_evidencia || null
-            ])
-        ));
-
+        for (const ctrl of controles) {
+            try {
+                await db.query(sql, [
+                    req.user.empresa_id, 
+                    ctrl.control_id, 
+                    ctrl.estado, 
+                    ctrl.observaciones || null, 
+                    ctrl.responsable || null, 
+                    ctrl.fecha_limite || null, // MySQL acepta NULL en fechas, pero no ""
+                    ctrl.link_evidencia || null
+                ]);
         res.json({ mensaje: "Progreso actualizado correctamente" });
-    } catch (error) {
-        console.error("Error en DB:", error);
-        res.status(500).json({ mensaje: "Error interno del servidor", detalle: error.message });
+    } catch (dbErr) {
+        console.error(`Error en control ${ctrl.control_id}:`, dbErr.message);
+        // Seguimos con el siguiente para que no muera todo el proceso
     }
-};
+}
