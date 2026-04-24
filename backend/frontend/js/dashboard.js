@@ -182,6 +182,22 @@ function generarReporte() {
     doc.save("Reporte_ISO27001.pdf");
 }
 
+// Función para abrir/cerrar el menú desplegable de la sidebar
+function toggleMenu() {
+    const items = document.getElementById('dropdown-items');
+    const arrow = document.getElementById('menu-arrow');
+    
+    if (items) {
+        if (items.style.display === 'flex') {
+            items.style.display = 'none';
+            if (arrow) arrow.innerText = '▼';
+        } else {
+            items.style.display = 'flex';
+            if (arrow) arrow.innerText = '▲';
+        }
+    }
+}
+
 function logout() {
     localStorage.clear();
     window.location.href = '/';
