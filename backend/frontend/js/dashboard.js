@@ -39,11 +39,13 @@ async function cargarControles() {
 }
 
 function restringirAccesosPorRol() {
+    // Normalizamos el rol para evitar errores de mayúsculas o espacios
     const rol = (localStorage.getItem('userRole') || '').toLowerCase().trim();
     
     const btnAuditor = document.getElementById('tab-auditor');
     const btnCapacitador = document.getElementById('tab-capacitador');
     const btnImplementador = document.getElementById('tab-implementador');
+    const tituloDashboard = document.getElementById('titulo-dashboard');
 
     // Ocultar botones de navegación por defecto
     if (btnAuditor) btnAuditor.style.display = 'none';
@@ -53,18 +55,25 @@ function restringirAccesosPorRol() {
     // Mostrar según rol
     if (rol === 'implementador') {
         if (btnImplementador) btnImplementador.style.display = 'block';
+        if (tituloDashboard) tituloDashboard.textContent = "Panel de Implementación";
         showTab('implementador');
     } else if (rol === 'capacitador') {
         if (btnCapacitador) btnCapacitador.style.display = 'block';
+        if (tituloDashboard) tituloDashboard.textContent = "Panel de Capacitación";
         showTab('capacitador');
     } else if (rol === 'auditor') {
         if (btnAuditor) btnAuditor.style.display = 'block';
+        if (tituloDashboard) tituloDashboard.textContent = "Panel de Auditoría";
         showTab('auditor');
-    } else if (rol === 'admin') {
+    } else if (rol === 'admin' || rol === 'todos') {
+        // EL CAMBIO ESTÁ AQUÍ: Activamos todo para el rol "todos"
         if (btnAuditor) btnAuditor.style.display = 'block';
         if (btnCapacitador) btnCapacitador.style.display = 'block';
         if (btnImplementador) btnImplementador.style.display = 'block';
-        showTab('auditor');
+        if (tituloDashboard) tituloDashboard.textContent = "Control Integral ISO 27001";
+        
+        // Por defecto mostramos la pestaña de auditoría al entrar
+        showTab('auditor'); 
     }
 }
 
@@ -81,25 +90,33 @@ function showTab(roleId) {
     const thEstado = document.getElementById('th-estado');
     const thAccion = document.getElementById('th-accion');
 
-    if (roleId === 'capacitador') {
-        thEstado.textContent = 'Enfoque: Enseñar';
-        thAccion.textContent = 'Evidencia / Material';
-    } else if (roleId === 'implementador') {
-        thEstado.textContent = 'Enfoque: Hacer';
-        thAccion.textContent = 'Fecha Límite';
-    } else {
-        thEstado.textContent = 'Estado';
-        thAccion.textContent = 'Observaciones';
+    // Evitar errores si los elementos no existen en el HTML
+    if (thEstado && thAccion) {
+        if (roleId === 'capacitador') {
+            thEstado.textContent = 'Enfoque: Enseñar';
+            thAccion.textContent = 'Evidencia / Material';
+        } else if (roleId === 'implementador') {
+            thEstado.textContent = 'Enfoque: Hacer';
+            thAccion.textContent = 'Fecha Límite';
+        } else {
+            thEstado.textContent = 'Estado de Auditoría';
+            thAccion.textContent = 'Observaciones del Auditor';
+        }
     }
 
     renderizarTabla(roleId);
 }
 
-// 4. DIBUJAR LA TABLA (Sin emojis para evitar errores de PDF y DB)
+// 4. DIBUJAR LA TABLA
 function renderizarTabla(modo) {
     const tbody = document.getElementById('controlesBody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
+    if (!window.datosControlesGlobal || window.datosControlesGlobal.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No hay datos disponibles</td></tr>';
+        return;
+    }
 
     window.datosControlesGlobal.forEach(control => {
         const tr = document.createElement('tr');
@@ -118,7 +135,7 @@ function renderizarTabla(modo) {
                 </td>
                 <td>
                     <input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Responsable">
-                    <input type="date" class="input-fecha" value="${control.fecha_limite || ''}" style="display:block; margin-top:5px;">
+                    <input type="date" class="input-fecha" value="${control.fecha_limite || ''}" style="display:block; margin-top:5px; width: 100%;">
                 </td>`;
         } else if (modo === 'capacitador') {
             celdasExtra = `
@@ -129,8 +146,9 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Finalizado</option>
                     </select>
                 </td>
-                <td><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link material"></td>`;
+                <td><input type="url" class="input-evidencia" value="${control.link_evidencia || ''}" placeholder="Link material" style="width: 100%;"></td>`;
         } else {
+            // Modo Auditor (default para admin/todos)
             celdasExtra = `
                 <td>
                     <select class="status-select">
@@ -139,14 +157,18 @@ function renderizarTabla(modo) {
                         <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
                     </select>
                 </td>
-                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}"></td>`;
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Observaciones de auditoría" style="width: 100%;"></td>`;
         }
 
-        tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
+        tr.innerHTML = `
+            <td><strong>${control.codigo}</strong></td>
+            <td>${control.nombre_control}</td>
+            <td><small>${control.categoria || 'Gral'}</small></td>
+            ${celdasExtra}
+        `;
         tbody.appendChild(tr);
     });
 }
-
 // 5. GUARDAR DATOS (Corregido para evitar "Datos Inválidos")
 async function guardarProgreso() {
     const btn = document.getElementById('btnGuardar');
