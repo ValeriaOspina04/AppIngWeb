@@ -98,23 +98,41 @@ function renderizarTabla(modo) {
             celdasExtra = `
                 <td>
                     <select class="status-select">
-                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>Pendiente</option>
-                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
-                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumplido</option>
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}> Por Implementar</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}> En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}> Cumplido</option>
                     </select>
                 </td>
                 <td>
                     <input type="text" class="input-responsable" value="${control.responsable || ''}" placeholder="Responsable">
                     <input type="date" class="input-fecha" value="${control.fecha_limite || ''}" style="margin-top:5px">
                 </td>`;
-        } 
-        // ... (repite la lógica sin emojis en los values para los otros modos)
-        
+        } else if (modo === 'capacitador') {
+            celdasExtra = `
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>Pendiente</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}> Capacitando</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>🎓 Finalizado</option>
+                    </select>
+                </td>
+                <td><input type="url" class="input-evidencia" placeholder="Link evidencia" value="${control.link_evidencia || ''}"></td>`;
+        } else {
+            celdasExtra = `
+                <td>
+                    <select class="status-select">
+                        <option value="No Iniciado" ${control.estado === 'No Iniciado' ? 'selected' : ''}>No Iniciado</option>
+                        <option value="En Proceso" ${control.estado === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                        <option value="Cumple" ${control.estado === 'Cumple' ? 'selected' : ''}>Cumple</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input-observacion" value="${control.observaciones || ''}" placeholder="Observaciones"></td>`;
+        }
+
         tr.innerHTML = `<td>${control.codigo}</td><td>${control.nombre_control}</td><td>${control.categoria || 'Gral'}</td>${celdasExtra}`;
         tbody.appendChild(tr);
     });
 }
-
 }
 
 // 5. ACCIÓN: GUARDAR
