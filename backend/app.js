@@ -6,7 +6,6 @@ const controlRoutes = require('./routes/controlRoutes');
 
 const app = express();
 const fs = require('fs');
-const path = require('path');
 
 // Definimos la ruta de la carpeta de subidas
 const uploadsDir = path.join(__dirname, 'uploads');
