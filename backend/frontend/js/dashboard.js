@@ -64,7 +64,17 @@ async function guardarProgreso() {
 }
 
 function showTab(roleId) {
-    console.log("Cambiando a pestaña:", roleId);
+    // 0. VALIDACIÓN DE SEGURIDAD
+    // Obtenemos el rol real desde el localStorage
+    const rolUsuario = (localStorage.getItem('userRole') || '').toLowerCase();
+    
+    // Si el usuario NO es admin y el roleId que quiere ver no coincide con su rol, bloqueamos.
+    if (rolUsuario !== 'admin' && rolUsuario !== roleId) {
+        console.warn(`Acceso denegado: El usuario con rol ${rolUsuario} intentó ver ${roleId}`);
+        return; // Salimos de la función y no cambia nada
+    }
+
+    console.log("Cambiando a pestaña autorizada:", roleId);
 
     // 1. Ocultar todas las secciones
     const secciones = document.querySelectorAll('.role-section');
@@ -85,16 +95,19 @@ function showTab(roleId) {
     const thEstado = document.getElementById('th-estado');
     const thAccion = document.getElementById('th-accion');
 
+    // Ajustamos los textos según el rol/sección
     if (roleId === 'capacitador') {
         if(thEstado) thEstado.textContent = 'Material de Apoyo';
         if(thAccion) thAccion.textContent = 'Subir Evidencia';
+    } else if (roleId === 'implementador') {
+        if(thEstado) thEstado.textContent = 'Responsable';
+        if(thAccion) thAccion.textContent = 'Fecha Límite';
     } else {
         if(thEstado) thEstado.textContent = 'Estado';
         if(thAccion) thAccion.textContent = 'Observaciones';
     }
 
     // 5. REDIBUJAR LA TABLA CON EL NUEVO MODO
-    // 'datosControlesGlobal' debe ser la variable donde guardas lo que viene del servidor
     if (window.datosControlesGlobal) {
         renderizarTabla(roleId);
     }
