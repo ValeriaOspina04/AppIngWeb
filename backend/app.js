@@ -5,7 +5,17 @@ const authRoutes = require('./routes/authRoutes');
 const controlRoutes = require('./routes/controlRoutes');
 
 const app = express();
+const fs = require('fs');
+const path = require('path');
 
+// Definimos la ruta de la carpeta de subidas
+const uploadsDir = path.join(__dirname, 'uploads');
+
+// Verificamos si existe; si no, la creamos al arrancar el servidor
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('✅ Carpeta /uploads creada exitosamente');
+}
 app.use(cors({
     origin: 'https://appingweb.onrender.com', 
     methods: ['GET', 'POST'],
