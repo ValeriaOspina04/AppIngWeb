@@ -140,7 +140,7 @@ async function guardarProgreso() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ avances })
+            body: JSON.stringify({ controles })
         });
 
         if (res.ok) {
